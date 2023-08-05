@@ -1,24 +1,32 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-at-symbol-linking",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Adds ability to link with `@` (the At Symbol) in Obsidian. Can scope @ linking to a specific directory e.g. `/contacts`",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"lint": "eslint src/ --ext .ts"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "Evan Bonsignori",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
+		"@typescript-eslint/eslint-plugin": "^6.2.1",
+		"@typescript-eslint/parser": "^6.2.1",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
+		"eslint": "^8.46.0",
+		"eslint-config-prettier": "^8.10.0",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"@codemirror/language": "^6.8.0",
+		"@popperjs/core": "^2.11.8",
+		"fuzzysort": "^2.0.4"
 	}
 }
