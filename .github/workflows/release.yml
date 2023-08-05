@@ -10,10 +10,10 @@ on:
       - "*"
 
 env:
-  PLUGIN_NAME: obsidian-at-symbol-linking
+  PLUGIN_NAME: at-symbol-linking
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
 
     steps:
