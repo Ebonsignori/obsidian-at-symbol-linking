@@ -1,0 +1,45 @@
+# Creates a new GitHub Release when a tag is pushed
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  PLUGIN_NAME: obsidian-at-symbol-linking
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+
+      - name: Build and zip
+        id: build
+        run: |
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          npm install
+          npm run build
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp styles.css main.js manifest.json ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+
+      - name: Release with files
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.PLUGIN_NAME }} ${{ steps.build.outputs.tag }}
+          body: "Release of ${{ env.PLUGIN_NAME }} ${{ steps.build.outputs.tag }} auto-created by [release.yml](.github/workflows/release.yml)"
+          files: |
+            ${{ env.PLUGIN_NAME }}.zip
+            main.js
+            manifest.json
+            styles.css
