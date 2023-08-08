@@ -128,4 +128,16 @@ export function applyHotKeyHack(_this: any, app: any) {
 		editorCallback: () => _this._suggestionPopup.applySelectedItem(),
 		isVisible: () => _this._suggestionPopup.isVisible(),
 	});
+	_this.addCommand({
+		id: "at-symbol-linking-insert-exit-suggestion",
+		name: "Exit suggestions",
+		hotkeys: [
+			{
+				key: "Escape",
+				modifiers: [],
+			},
+		],
+		editorCallback: () => _this._suggestionPopup.closeSuggestion(),
+		isVisible: () => _this._suggestionPopup.isVisible(),
+	});
 }

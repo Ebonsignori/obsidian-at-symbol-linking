@@ -16,16 +16,15 @@ type fileOption = {
 };
 
 type fileOptionResult = {
-	0: { target: string; indexes: number[]; score: number };
-	1: { target: string; indexes: number[]; score: number };
+	0?: { target: string; indexes: number[]; score: number };
+	1?: { target: string; indexes: number[]; score: number };
 	obj: fileOption;
 };
-
-let isOpen = false;
 
 export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 	private readonly settings: AtSymbolLinkingSettings;
 
+	private firstOpenedCursor: null | EditorPosition = null;
 	private focused = false;
 
 	constructor(app: App, settings: AtSymbolLinkingSettings) {
@@ -84,17 +83,29 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 						alias: alias,
 					});
 				}
-			} else {
-				options.push({
-					fileName: file.basename,
-					filePath: file.path,
-				});
 			}
+			// Include fileName without alias as well
+			options.push({
+				fileName: file.basename,
+				filePath: file.path,
+			});
 		}
 
-		const results = fuzzysort.go(context.query, options, {
-			keys: ["alias", "fileName"],
-		}) as unknown as fileOptionResult[];
+		// Show all files when no query
+		let results;
+		if (!context.query) {
+			results = options
+				.map((option) => ({
+					obj: option,
+				}))
+				// Reverse because filesystem is sorted alphabetically
+				.reverse();
+		} else {
+			// Fuzzy search files based on query
+			results = fuzzysort.go(context.query, options, {
+				keys: ["alias", "fileName"],
+			}) as unknown as fileOptionResult[];
+		}
 
 		return results;
 	}
@@ -103,25 +114,27 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 		cursor: EditorPosition,
 		editor: Editor
 	): EditorSuggestTriggerInfo | null {
+		let query = "";
 		const typedChar = editor.getRange(
 			{ ...cursor, ch: cursor.ch - 1 },
 			{ ...cursor, ch: cursor.ch }
 		);
-		if (typedChar === " ") {
-			isOpen = false;
-			return null;
+
+
+		// When open and user enters space, or newline, or tab, close
+		if (
+			this.firstOpenedCursor &&
+			(typedChar === " " || typedChar === "\n" || typedChar === "\t")
+		) {
+			return this.closeSuggestion();
 		}
 
-		// Trigger when @ is typed
-		if (isOpen || typedChar === "@") {
-			isOpen = true;
+		// TODO: If user's cursor is inside a code block, don't attempt to link
+		// Is there an easy way to get state of cursor? Or do I have to parse the text?
 
-			const line = editor.getRange(
-				{ ...cursor, ch: 0 },
-				{ ...cursor, ch: cursor.ch + 1 }
-			);
-			const query = line.substring(line.lastIndexOf("@") + 1);
-
+		// Open suggestion when @ is typed
+		if (typedChar === "@") {
+			this.firstOpenedCursor = cursor;
 			return {
 				start: { ...cursor, ch: cursor.ch - 1 },
 				end: cursor,
@@ -129,7 +142,31 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 			};
 		}
 
-		return null;
+		// Don't continue evaluating if not opened
+		if (!this.firstOpenedCursor) {
+			return null;
+		} else {
+			query = editor.getRange(this.firstOpenedCursor, {
+				...cursor,
+				ch: cursor.ch + 1,
+			});
+		}
+
+		// If query is empty or doesn't have valid filename characters, close
+		if (
+			!query ||
+			!/[a-z0-9\\$\\-\\_\\!\\%\\"\\'\\.\\,\\*\\&\\(\\)\\;\\{\\}\\+\\=\\~\\`\\?)]/i.test(
+				query
+			)
+		) {
+			return this.closeSuggestion();
+		}
+
+		return {
+			start: { ...cursor, ch: cursor.ch - 1 },
+			end: cursor,
+			query,
+		};
 	}
 
 	renderSuggestion(value: fileOptionResult, el: HTMLElement): void {
@@ -139,20 +176,35 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 		const fileName = value[1]
 			? fuzzysort.highlight(value[1])
 			: value.obj?.fileName;
+
 		el.addClass("at-symbol-linking-suggestion");
 
-		const container = el.doc.createElement("div");
+		const context = el.doc.createElement("div");
+		context.addClass("suggestion-context");
+
 		const title = el.doc.createElement("div");
 		title.addClass("suggestion-title");
 		title.innerHTML = alias || fileName || "";
 		const path = el.doc.createElement("div");
 		path.addClass("suggestion-path");
-		path.setText(value.obj?.filePath);
+		path.setText(value.obj?.filePath?.slice(0, -3));
 
-		container.appendChild(title);
-		container.appendChild(path);
+		context.appendChild(title);
+		context.appendChild(path);
 
-		el.appendChild(container);
+		const aux = el.doc.createElement("div");
+		aux.addClass("suggestion-aux");
+
+		if (value?.obj?.alias) {
+			const alias = el.doc.createElement("span");
+			alias.addClass("suggestion-flair");
+			alias.ariaLabel = "Alias";
+			alias.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-forward"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg`;
+			aux.appendChild(alias);
+		}
+
+		el.appendChild(context);
+		el.appendChild(aux);
 	}
 
 	selectSuggestion(value: fileOptionResult): void {
@@ -198,6 +250,12 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 			self.suggestions.selectedItem + dir,
 			new KeyboardEvent("keydown")
 		);
+	}
+
+	closeSuggestion() {
+		this.firstOpenedCursor = null;
+		this.close();
+		return null;
 	}
 
 	getSelectedItem(): fileOptionResult {
