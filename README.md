@@ -2,25 +2,32 @@
 
 ![Gif demo of using the @ symbol to link to a name in Persons/](./docs/at-symbol-linking-demo.gif)
 
-This plugin adds ability to link with `@` (the At Symbol) in [Obsidian](https://obsidian.md/). Can scope `@` linking to a specific directory e.g. `Contacts/`.
+This plugin adds ability to link with `@` (the At Symbol) in [Obsidian](https://obsidian.md/). Can scope `@` linking to only source links from specific directories e.g. `Contacts/`.
 
 Useful if you're used to using `@` to link to people in other tools like GitHub or Slack.
 
-I keep a directory of People in `People/` and whenever they popup in a journal entry I link to them with `@` to distinguish them as people as opposed to files.
+I keep a directory of contacts in `People/` and whenever I want to reference them in a journal entry I link to them with `@` to distinguish them as people as opposed to files.
 
 ## Settings
 
-- Limit `@` links to specific directories, like your `Contacts/` directory.
+- Limit `@` links to only source links from specific directories, like your `Contacts/` directory.
 - Use Obsidian style links, `[[filePath|linkText]]` or Markdown style links, `[linkText](filePath)`
-- Include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
+- Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
 
 ## Hotkeys
 
-Supports `up`, `down` and `enter` keys for navigating the link search popup.
+Supports `up`, `down`, `enter`, and `escape` keys for navigating the link search popup.
 
-## Development
+## Contributing 
 
-Feel free to open a PR to improve this, wrote this in a day borrowing heavily from [obsidian-completr](https://github.com/tth05/obsidian-completr) and [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover).
+Feel free to open a PR to improve this.
+
+The implementation borrows from:
+
+- [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
+- [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover): For folder suggesting in in settings 
+
+### Local development
 
 1. Move this to your `.obsidian/plugins` directory in a vault you don't mind messing with.
 1. `npm i`
