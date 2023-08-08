@@ -18,9 +18,22 @@ I keep a directory of contacts in `People/` and whenever I want to reference the
 
 Supports `up`, `down`, `enter`, and `escape` keys for navigating the link search popup.
 
+## Installing
+
+The preferred method is adding this through the [built-in community plugin browser](https://help.obsidian.md/Extending+Obsidian/Community+plugins) in Obsidian.
+
+### Manual installation
+
+1. Create a new folder in your vault, `.obsidian/plugins/at-symbol-linking`
+1. Download and move the files from the latest release in the [Releases Page](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases) to the new folder, `.obsidian/plugins/at-symbol-linking`
+1. In Obsidian go to `Settings -> Community Plugins`
+1. Enable community plugins if they aren't already enabled, then and enable the checkbox for `@ Symbol Linking`
+
 ## Contributing 
 
-Feel free to open a PR to improve this.
+Please [open an issue](https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues/new) with any suggestions or bug reports.
+
+Or feel free to fork and open a PR :heart:
 
 The implementation borrows from:
 
