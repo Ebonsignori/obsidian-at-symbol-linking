@@ -36,8 +36,8 @@ jobs:
       - name: Release with files
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ env.PLUGIN_NAME }} ${{ steps.build.outputs.tag }}
-          body: "Release of ${{ env.PLUGIN_NAME }} ${{ steps.build.outputs.tag }} auto-created by [release.yml](.github/workflows/release.yml)"
+          name: ${{ steps.build.outputs.tag }}
+          body: "*Release of ${{ env.PLUGIN_NAME }} v${{ steps.build.outputs.tag }} auto-created by [release.yml](.github/workflows/release.yml)*"
           files: |
             ${{ env.PLUGIN_NAME }}.zip
             main.js
