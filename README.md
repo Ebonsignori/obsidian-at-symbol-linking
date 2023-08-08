@@ -25,7 +25,7 @@ Feel free to open a PR to improve this.
 The implementation borrows from:
 
 - [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
-- [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover): For folder suggesting in in settings 
+- [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover): For folder suggesting in settings 
 
 ### Local development
 
