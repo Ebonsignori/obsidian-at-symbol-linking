@@ -2,7 +2,7 @@
 
 ![Gif demo of using the @ symbol to link to a name in Persons/](./docs/at-symbol-linking-demo.gif)
 
-This plugin adds ability to link with `@` (the At Symbol) in [Obsidian](https://obsidian.md/). Can scope `@` linking to only source links from specific directories e.g. `Contacts/`.
+Adds the ability to link using the `@` (the At Symbol) in [Obsidian](https://obsidian.md/). Can scope `@` linking to only source links from specific directories e.g. `Contacts/`.
 
 Useful if you're used to using `@` to link to people in other tools like GitHub or Slack.
 
