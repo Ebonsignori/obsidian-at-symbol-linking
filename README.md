@@ -49,10 +49,12 @@ The implementation borrows from:
 
 ### Releasing
 
-Once changes are in `main` simply add a tag reflecting the new semver (without the `v` prefix) and then push the tag to the repo.
+Once changes are in `main`, add a tag reflecting the new semver (without the `v` prefix) and push the tag to the repo.
 
 For example:
 ```
 git tag 1.0.0
 git push origin 1.0.0
 ```
+
+[Release.yml](./.github/workflows/release.yml) will handle bumping the version and publishing a release to the [Releases Page](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases).
