@@ -1,10 +1,10 @@
 {
-	"id": "at-symbol-linking",
-	"name": "@ Symbol Linking",
-	"version": "1.1.1",
-	"minAppVersion": "0.15.0",
-	"description": "Adds ability to link with @ (the At Symbol) in Obsidian. Can scope @ linking to a specific directory e.g. Contacts/",
-	"author": "Evan Bonsignori",
-	"authorUrl": "https://github.com/Ebonsignori",
-	"isDesktopOnly": false
+  "id": "at-symbol-linking",
+  "name": "@ Symbol Linking",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Adds ability to link with @ (the At Symbol) in Obsidian. Can scope @ linking to a specific directory e.g. Contacts/",
+  "author": "Evan Bonsignori",
+  "authorUrl": "https://github.com/Ebonsignori",
+  "isDesktopOnly": false
 }
