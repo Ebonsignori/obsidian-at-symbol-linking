@@ -43,10 +43,6 @@ jobs:
           cp styles.css main.js manifest.json ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
 
-          # Delete tag so it can be recreated with version bumps
-          git tag -d ${{ steps.build.outputs.tag }}
-          git push --tags --force
-
       - name: Commit version changes
         uses: EndBug/add-and-commit@v9
         with:
@@ -54,7 +50,7 @@ jobs:
           add: 'manifest.json package.json package-lock.json'
           message: 'Release v${{ steps.build.outputs.tag }}'
           # Override existing tag with new tag that has version bump
-          tag: ${{ steps.build.outputs.tag }}
+          tag: '${{ steps.build.outputs.tag }} --force'
           tag_push: '--force'
 
       - name: Release with files
