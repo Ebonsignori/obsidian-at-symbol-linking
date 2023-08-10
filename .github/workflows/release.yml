@@ -31,8 +31,8 @@ jobs:
           echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
           # Update version in manifest.json and package.json
-          jq '.version = "${GITHUB_REF#refs/*/}"' manifest.json >> tmp.$$.json && mv tmp.$$.json manifest.json
-          jq '.version = "${GITHUB_REF#refs/*/}"' package.json >> tmp.$$.json && mv tmp.$$.json package.json
+          jq '.version = "${{GITHUB_REF#refs/*/}}"' manifest.json >> tmp.$$.json && mv tmp.$$.json manifest.json
+          jq '.version = "${{GITHUB_REF#refs/*/}}"' package.json >> tmp.$$.json && mv tmp.$$.json package.json
 
           # Build and zip release
           npm install
