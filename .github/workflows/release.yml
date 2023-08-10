@@ -17,9 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v1
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 16
 
@@ -41,8 +43,9 @@ jobs:
           cp styles.css main.js manifest.json ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
 
-          # Delete tag so it can be updated with version
+          # Delete tag so it can be recreated with version bumps
           git tag -d ${{ steps.build.outputs.tag }}
+          git push --tags --force
 
       - name: Commit version changes
         uses: EndBug/add-and-commit@v9
@@ -50,6 +53,7 @@ jobs:
           default_author: github_actor
           add: 'manifest.json package.json package-lock.json'
           message: 'Release v${{ steps.build.outputs.tag }}'
+          # Override existing tag with new tag that has version bump
           tag: ${{ steps.build.outputs.tag }}
           tag_push: '--force'
 
