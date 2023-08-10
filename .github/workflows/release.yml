@@ -7,7 +7,7 @@ permissions:
 on:
   push:
     tags:
-      - "*"
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 env:
   PLUGIN_NAME: at-symbol-linking
@@ -26,7 +26,15 @@ jobs:
       - name: Build and zip
         id: build
         run: |
+          # Tag is valid, so set it as output to consume in later steps
           echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/*/}"
+
+          # Update version in manifest.json and package.json
+          jq '.version = "$tag"' manifest.json >> tmp.$$.json && mv tmp.$$.json manifest.json
+          jq '.version = "$tag"' package.json >> tmp.$$.json && mv tmp.$$.json package.json
+
+          # Build and zip release
           npm install
           npm run build
           mkdir ${{ env.PLUGIN_NAME }}
@@ -43,3 +51,11 @@ jobs:
             main.js
             manifest.json
             styles.css
+
+      - name: Commit version changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actor
+          add: 'manifest.json package.json package-lock.json'
+          message: 'Release v${{ steps.build.outputs.tag }}'
+          tag: ${{ steps.build.outputs.tag }}
