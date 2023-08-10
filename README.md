@@ -46,3 +46,13 @@ The implementation borrows from:
 1. `npm i`
 1. `npm run dev`
 1. Add [hot-reload](https://github.com/pjeby/hot-reload) to the same `.obsidian/plugins` directory and enable it in Obsidian to ease development.
+
+### Releasing
+
+Once changes are in `main` simply add a tag reflecting the new semver (without the `v` prefix) and then push the tag to the repo.
+
+For example:
+```
+git tag 1.0.0
+git push origin 1.0.0
+```
