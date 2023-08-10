@@ -58,3 +58,5 @@ git push origin 1.0.0
 ```
 
 [Release.yml](./.github/workflows/release.yml) will handle bumping the version and publishing a release to the [Releases Page](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases).
+
+Remember to update the [newest release](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases) notes with any relevant changes.
