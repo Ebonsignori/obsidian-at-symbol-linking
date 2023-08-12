@@ -1,3 +1,4 @@
+// Code derived from https://github.com/tth05/obsidian-completr
 import { KeymapContext } from "obsidian";
 import { SelectionDirection } from "./popup";
 
@@ -87,7 +88,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 	);
 
 	_this.addCommand({
-		id: "at-symbol-linking-select-next-suggestion",
+		id: "select-next-suggestion",
 		name: "Select next suggestion",
 		hotkeys: [
 			{
@@ -102,7 +103,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		isVisible: () => _this._suggestionPopup.isVisible(),
 	});
 	_this.addCommand({
-		id: "at-symbol-linking-select-previous-suggestion",
+		id: "select-previous-suggestion",
 		name: "Select previous suggestion",
 		hotkeys: [
 			{
@@ -117,7 +118,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		isVisible: () => _this._suggestionPopup.isVisible(),
 	});
 	_this.addCommand({
-		id: "at-symbol-linking-insert-selected-suggestion",
+		id: "insert-selected-suggestion",
 		name: "Insert selected suggestion",
 		hotkeys: [
 			{
@@ -129,7 +130,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		isVisible: () => _this._suggestionPopup.isVisible(),
 	});
 	_this.addCommand({
-		id: "at-symbol-linking-insert-exit-suggestion",
+		id: "exit-suggestion",
 		name: "Exit suggestions",
 		hotkeys: [
 			{

@@ -5,9 +5,11 @@ import {
 	EditorSuggest,
 	EditorSuggestContext,
 	EditorSuggestTriggerInfo,
+	setIcon,
 } from "obsidian";
 import fuzzysort from "fuzzysort";
 import { AtSymbolLinkingSettings, LinkType } from "src/settings/settings";
+import { highlightSearch } from "./utils";
 
 type fileOption = {
 	fileName: string;
@@ -15,13 +17,9 @@ type fileOption = {
 	alias?: string;
 };
 
-type fileOptionResult = {
-	0?: { target: string; indexes: number[]; score: number };
-	1?: { target: string; indexes: number[]; score: number };
-	obj: fileOption;
-};
-
-export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
+export default class SuggestionPopup extends EditorSuggest<
+	Fuzzysort.KeysResult<fileOption>
+> {
 	private readonly settings: AtSymbolLinkingSettings;
 
 	private firstOpenedCursor: null | EditorPosition = null;
@@ -46,7 +44,9 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 		this.focused = false;
 	}
 
-	getSuggestions(context: EditorSuggestContext): fileOptionResult[] {
+	getSuggestions(
+		context: EditorSuggestContext
+	): Fuzzysort.KeysResult<fileOption>[] {
 		const options: fileOption[] = [];
 		for (const file of context.file.vault.getMarkdownFiles()) {
 			// If there are folders to limit links to, check if the file is in one of them
@@ -104,7 +104,7 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 			// Fuzzy search files based on query
 			results = fuzzysort.go(context.query, options, {
 				keys: ["alias", "fileName"],
-			}) as unknown as fileOptionResult[];
+			}) as any;
 		}
 
 		return results;
@@ -119,7 +119,6 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 			{ ...cursor, ch: cursor.ch - 1 },
 			{ ...cursor, ch: cursor.ch }
 		);
-
 
 		// When open and user enters space, or newline, or tab, close
 		if (
@@ -169,22 +168,29 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 		};
 	}
 
-	renderSuggestion(value: fileOptionResult, el: HTMLElement): void {
-		const alias = value[0]
-			? fuzzysort.highlight(value[0])
-			: value.obj?.alias;
-		const fileName = value[1]
-			? fuzzysort.highlight(value[1])
-			: value.obj?.fileName;
-
+	renderSuggestion(
+		value: Fuzzysort.KeysResult<fileOption>,
+		el: HTMLElement
+	): void {
 		el.addClass("at-symbol-linking-suggestion");
-
 		const context = el.doc.createElement("div");
 		context.addClass("suggestion-context");
 
+		// Add title with matching search terms bolded (highlighted)
 		const title = el.doc.createElement("div");
 		title.addClass("suggestion-title");
-		title.innerHTML = alias || fileName || "";
+		if (value[0]) {
+			highlightSearch(title, value[0]);
+		} else if (value.obj?.alias) {
+			title.setText(value.obj?.alias);
+		} else if (value[1]) {
+			highlightSearch(title, value[1]);
+		} else if (value.obj?.fileName) {
+			title.setText(value.obj?.fileName);
+		} else {
+			title.setText("");
+		}
+
 		const path = el.doc.createElement("div");
 		path.addClass("suggestion-path");
 		path.setText(value.obj?.filePath?.slice(0, -3));
@@ -199,7 +205,7 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 			const alias = el.doc.createElement("span");
 			alias.addClass("suggestion-flair");
 			alias.ariaLabel = "Alias";
-			alias.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-forward"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg`;
+			setIcon(alias, "forward");
 			aux.appendChild(alias);
 		}
 
@@ -207,7 +213,7 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 		el.appendChild(aux);
 	}
 
-	selectSuggestion(value: fileOptionResult): void {
+	selectSuggestion(value: Fuzzysort.KeysResult<fileOption>): void {
 		const line =
 			this.context?.editor.getRange(
 				{
@@ -217,7 +223,7 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 				this.context.end
 			) || "";
 		let linkText = "";
-		if (this.settings.linkType === LinkType.OBSIDIAN_STYLE) {
+		if (this.settings.linkType === LinkType.WIKI_STYLE) {
 			linkText = `[[${value.obj?.filePath}|${
 				this.settings.includeSymbol ? "@" : ""
 			}${value.obj?.alias || value.obj?.fileName}]]`;
@@ -258,7 +264,7 @@ export default class SuggestionPopup extends EditorSuggest<fileOptionResult> {
 		return null;
 	}
 
-	getSelectedItem(): fileOptionResult {
+	getSelectedItem(): Fuzzysort.KeysResult<fileOption> {
 		const self = this as any;
 		return self.suggestions.values[self.suggestions.selectedItem];
 	}
