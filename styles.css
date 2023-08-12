@@ -1,7 +1,13 @@
+/* At Symbol Linking styles */
 .at-symbol-linking-folder-setting {
 	.search-input-container {
 		width: 100%;
 	}
+}
+
+.at-symbol-linking-heading {
+	margin: 0;
+	color: var(--text-normal);
 }
 
 .at-symbol-linking-suggestion {

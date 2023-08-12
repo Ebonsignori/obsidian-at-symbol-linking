@@ -43,8 +43,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Add a description to the top of the settings tab
 		const descEl = document.createDocumentFragment();
 		descEl.append(
-			descEl.createEl("strong", { text: "What is @ Symbol Linking?" }),
-			descEl.createEl("br"),
+			createHeading(descEl, "At Symbol Linking"),
 			"This plugin allows you to type @ and then a file name to link to that file.",
 			descEl.createEl("br"),
 			descEl.createEl("em", {
@@ -188,4 +187,12 @@ export class SettingsTab extends PluginSettingTab {
 		);
 		// End limitLinksToFolders option
 	}
+}
+
+function createHeading(el: DocumentFragment, text: string, level = 2) {
+	const heading = el.createEl(`h${level}` as keyof HTMLElementTagNameMap, {
+		text,
+	});
+	heading.addClass("at-symbol-linking-heading");
+	return heading;
 }
