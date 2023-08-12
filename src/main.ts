@@ -17,7 +17,6 @@ export default class AtSymbolLinking extends Plugin {
 		this._suggestionPopup = new SuggestionPopup(this.app, this.settings);
 		this.registerEditorSuggest(this._suggestionPopup);
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 
 		applyHotKeyHack(this, this.app);

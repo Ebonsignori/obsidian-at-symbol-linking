@@ -1,3 +1,4 @@
+// Code derived from https://github.com/farux/obsidian-auto-note-mover 
 import { App, ISuggestOwner, Scope, TAbstractFile, TFolder } from "obsidian";
 import { createPopper, Instance as PopperInstance } from "@popperjs/core";
 
@@ -185,7 +186,7 @@ abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 		(<any>this.app).keymap.popScope(this.scope);
 
 		this.suggest.setSuggestions([]);
-		this.popper.destroy();
+		this.popper?.destroy();
 		this.suggestEl.detach();
 	}
 

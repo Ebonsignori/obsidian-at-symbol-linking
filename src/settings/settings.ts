@@ -3,8 +3,8 @@ import AtSymbolLinking from "src/main";
 import { FolderSuggest } from "./folder-suggest";
 
 export enum LinkType {
-	OBSIDIAN_STYLE = "Obsidian Style",
-	MARKDOWN_STYLE = "Markdown Style",
+	WIKI_STYLE = "Wiki style",
+	MARKDOWN_STYLE = "Markdown style",
 }
 
 export interface AtSymbolLinkingSettings {
@@ -15,7 +15,7 @@ export interface AtSymbolLinkingSettings {
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	limitLinkDirectories: [],
-	linkType: LinkType.OBSIDIAN_STYLE,
+	linkType: LinkType.WIKI_STYLE,
 	includeSymbol: true,
 };
 
@@ -53,34 +53,33 @@ export class SettingsTab extends PluginSettingTab {
 		);
 		new Setting(this.containerEl).setDesc(descEl);
 
-		// Begin Rule 1: Determine which type of link to create
+		// Begin linkType option: Determine which type of link to create
 		const linkTypeDesc = document.createDocumentFragment();
 		linkTypeDesc.append(
 			"Choose which type of link to create",
 			descEl.createEl("br"),
-			descEl.createEl("strong", { text: "Obsidian Style" }),
+			descEl.createEl("strong", { text: LinkType.WIKI_STYLE + " (default)" }),
 			' will create a link in the format "[[filePath|linkText]]"',
 			descEl.createEl("br"),
-			descEl.createEl("strong", { text: "Markdown Style" }),
+			descEl.createEl("strong", { text: LinkType.MARKDOWN_STYLE }),
 			' will create a link in the format "[linkText](filePath)"'
 		);
 		new Setting(this.containerEl)
-			.setName("Link Type")
+			.setName("Link type")
 			.setDesc(linkTypeDesc)
 			.addDropdown((dropDown) =>
 				dropDown
-					.addOption("Obsidian Style", LinkType.OBSIDIAN_STYLE)
-					.addOption("Markdown Style", LinkType.MARKDOWN_STYLE)
+					.addOption(LinkType.WIKI_STYLE, LinkType.WIKI_STYLE)
+					.addOption(LinkType.MARKDOWN_STYLE, LinkType.MARKDOWN_STYLE)
 					.setValue(this.plugin.settings.linkType)
 					.onChange(async (value: LinkType) => {
 						this.plugin.settings.linkType = value;
-						this.plugin.saveData(this.plugin.settings);
-						this.display();
+						this.plugin.saveSettings();
 					})
 			);
-		// End Rule 1
+		// End linkType option
 
-		// Begin Rule 2: Determine which type of link to create
+		// Begin includeSymbol option: Determine whether to include @ symbol in link
 		const includeSymbolDesc = document.createDocumentFragment();
 		linkTypeDesc.append(
 			"Include the @ symbol in the found link",
@@ -88,20 +87,19 @@ export class SettingsTab extends PluginSettingTab {
 			"Toggle off to remove the @ symbol from the final link"
 		);
 		new Setting(this.containerEl)
-			.setName("Include @ Symbol")
+			.setName("Include @ symbol")
 			.setDesc(includeSymbolDesc)
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.includeSymbol)
 					.onChange((value: boolean) => {
 						this.plugin.settings.includeSymbol = value;
-						this.plugin.saveData(this.plugin.settings);
-						this.display();
+						this.plugin.saveSettings();
 					})
 			);
-		// End Rule 2
+		// End includeSymbol option
 
-		// Begin Rule 3: limit which folders links are sourced from
+		// Begin limitLinksToFolders option: limit which folders links are sourced from
 		const ruleDesc = document.createDocumentFragment();
 		ruleDesc.append(
 			"@ linking will only source links from the following folders.",
@@ -126,7 +124,7 @@ export class SettingsTab extends PluginSettingTab {
 					.onClick(async () => {
 						this.plugin.settings.limitLinkDirectories.push("");
 						await this.plugin.saveSettings();
-						this.display();
+						return this.display();
 					});
 			});
 
@@ -188,6 +186,6 @@ export class SettingsTab extends PluginSettingTab {
 				newDirectorySetting.infoEl.remove();
 			}
 		);
-		// End Rule 3
+		// End limitLinksToFolders option
 	}
 }
