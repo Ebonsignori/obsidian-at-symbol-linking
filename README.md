@@ -58,7 +58,7 @@ Remember to update the [newest release](https://github.com/Ebonsignori/obsidian-
 
 ## Acknowledgements
 
-[The Obsidian team](https://obsidian.md/about) for creating a wonderful product.
+[The Obsidian team](https://obsidian.md/about) for creating a wonderful product :purple_heart:
 
 The implementation borrows from:
 
