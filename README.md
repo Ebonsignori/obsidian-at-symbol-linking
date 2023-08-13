@@ -58,6 +58,8 @@ Remember to update the [newest release](https://github.com/Ebonsignori/obsidian-
 
 ## Acknowledgements
 
+[The Obsidian team](https://obsidian.md/about) for creating a wonderful product.
+
 The implementation borrows from:
 
 - [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
