@@ -35,11 +35,6 @@ Please [open an issue](https://github.com/Ebonsignori/obsidian-at-symbol-linking
 
 Or feel free to fork and open a PR :heart:
 
-The implementation borrows from:
-
-- [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
-- [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover): For folder suggesting in settings 
-
 ### Local development
 
 1. Move this to your `.obsidian/plugins` directory in a vault you don't mind messing with.
@@ -60,3 +55,10 @@ git push origin 1.0.0
 [Release.yml](./.github/workflows/release.yml) will handle bumping the version and publishing a release to the [Releases Page](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases).
 
 Remember to update the [newest release](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases) notes with any relevant changes.
+
+## Acknowledgements
+
+The implementation borrows from:
+
+- [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
+- [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover): For folder suggesting in settings 
