@@ -225,9 +225,14 @@ export default class SuggestionPopup extends EditorSuggest<
 				},
 				this.context.end
 			) || "";
+
 		let linkText = "";
 		if (this.settings.linkType === LinkType.WIKI_STYLE) {
-			linkText = `[[${value.obj?.filePath}|${
+			let filePath = value.obj?.filePath;
+			if (filePath.endsWith(".md")) {
+				filePath = filePath.slice(0, -3);
+			}
+			linkText = `[[${filePath}|${
 				this.settings.includeSymbol ? "@" : ""
 			}${value.obj?.alias || value.obj?.fileName}]]`;
 		} else if (this.settings.linkType === LinkType.MARKDOWN_STYLE) {
