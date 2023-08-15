@@ -5,6 +5,7 @@ import {
 	EditorSuggest,
 	EditorSuggestContext,
 	EditorSuggestTriggerInfo,
+	TFile,
 	setIcon,
 } from "obsidian";
 import fuzzysort from "fuzzysort";
@@ -24,9 +25,11 @@ export default class SuggestionPopup extends EditorSuggest<
 
 	private firstOpenedCursor: null | EditorPosition = null;
 	private focused = false;
+	private app: App;
 
 	constructor(app: App, settings: AtSymbolLinkingSettings) {
 		super(app);
+		this.app = app;
 		this.settings = settings;
 
 		//Remove default key registrations
@@ -228,9 +231,17 @@ export default class SuggestionPopup extends EditorSuggest<
 				this.settings.includeSymbol ? "@" : ""
 			}${value.obj?.alias || value.obj?.fileName}]]`;
 		} else if (this.settings.linkType === LinkType.MARKDOWN_STYLE) {
-			linkText = `[${this.settings.includeSymbol ? "@" : ""}${
-				value.obj?.alias || value.obj?.fileName
-			}](<${value.obj?.filePath}>)`;
+			const currentFile = this.app.workspace.getActiveFile();
+			const linkFile = this.app.vault.getAbstractFileByPath(
+				value.obj?.filePath
+			) as TFile;
+			linkText = this.app.fileManager.generateMarkdownLink(
+				linkFile,
+				currentFile?.path || ""
+			);
+			if (this.settings.includeSymbol) {
+				linkText = "[@" + linkText.substring(1);
+			}
 		}
 
 		this.context?.editor.replaceRange(
