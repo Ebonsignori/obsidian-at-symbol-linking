@@ -2,20 +2,13 @@ import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
 import AtSymbolLinking from "src/main";
 import { FolderSuggest } from "./folder-suggest";
 
-export enum LinkType {
-	WIKI_STYLE = "Wiki style",
-	MARKDOWN_STYLE = "Markdown style",
-}
-
 export interface AtSymbolLinkingSettings {
 	limitLinkDirectories: Array<string>;
-	linkType: LinkType;
 	includeSymbol: boolean;
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	limitLinkDirectories: [],
-	linkType: LinkType.WIKI_STYLE,
 	includeSymbol: true,
 };
 
@@ -52,35 +45,9 @@ export class SettingsTab extends PluginSettingTab {
 		);
 		new Setting(this.containerEl).setDesc(descEl);
 
-		// Begin linkType option: Determine which type of link to create
-		const linkTypeDesc = document.createDocumentFragment();
-		linkTypeDesc.append(
-			"Choose which type of link to create",
-			descEl.createEl("br"),
-			descEl.createEl("strong", { text: LinkType.WIKI_STYLE + " (default)" }),
-			' will create a link in the format "[[filePath|linkText]]"',
-			descEl.createEl("br"),
-			descEl.createEl("strong", { text: LinkType.MARKDOWN_STYLE }),
-			' will create a link in the format "[linkText](filePath)"'
-		);
-		new Setting(this.containerEl)
-			.setName("Link type")
-			.setDesc(linkTypeDesc)
-			.addDropdown((dropDown) =>
-				dropDown
-					.addOption(LinkType.WIKI_STYLE, LinkType.WIKI_STYLE)
-					.addOption(LinkType.MARKDOWN_STYLE, LinkType.MARKDOWN_STYLE)
-					.setValue(this.plugin.settings.linkType)
-					.onChange(async (value: LinkType) => {
-						this.plugin.settings.linkType = value;
-						this.plugin.saveSettings();
-					})
-			);
-		// End linkType option
-
 		// Begin includeSymbol option: Determine whether to include @ symbol in link
 		const includeSymbolDesc = document.createDocumentFragment();
-		linkTypeDesc.append(
+		includeSymbolDesc.append(
 			"Include the @ symbol in the found link",
 			descEl.createEl("br"),
 			"Toggle off to remove the @ symbol from the final link"
