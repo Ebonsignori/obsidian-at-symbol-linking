@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+[ -n "$CI" ] && exit 0
+. "$(dirname -- "$0")/_/husky.sh"
+
+YELLOW="\033[1;33m"
+GREEN="\033[1;32m"
+RESET="\033[0m"
+
+# Read pre-commit.options to check if linting is enabled
+APP_PRE_COMMIT_OPTIONS="$(dirname -- "$0")/pre-commit.options"
+
+if [ -f "${APP_PRE_COMMIT_OPTIONS}" ]; then
+  . "${APP_PRE_COMMIT_OPTIONS}"
+fi
+
+# If APP_LINT is empty or true, run lint
+if [ -z "${APP_LINT}" ] || [ "${APP_LINT}" == "true" ]; then
+  echo "${GREEN}Running pre-commit: lint${RESET}"
+  if [ -z ${APP_LINT} ]; then
+    echo "${YELLOW}If you'd like to always skip this check, run: echo 'APP_LINT=false;' > .husky/pre-commit.options${RESET}"
+    echo "${YELLOW}If you'd like to silence this message and keep this check, run: echo 'APP_LINT=true;' > .husky/pre-commit.options${RESET}"
+  fi
+  npm run lint
+fi

@@ -232,7 +232,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		) as TFile;
 		let alias = value.obj?.alias || undefined;
 		if (this.settings.includeSymbol) alias = `@${alias || value.obj?.fileName}`;
-		let linkText = this.app.fileManager.generateMarkdownLink(
+		const linkText = this.app.fileManager.generateMarkdownLink(
 			linkFile,
 			currentFile?.path || "",
 			undefined, // we don't care about the subpath
