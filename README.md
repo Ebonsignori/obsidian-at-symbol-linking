@@ -11,8 +11,9 @@ I keep a directory of contacts in `People/` and whenever I want to reference the
 ## Settings
 
 - Limit `@` links to only source links from specific directories, like your `Contacts/` directory.
-- Use Wiki style links, `[[filePath|linkText]]` or Markdown style links, `[linkText](filePath)`
 - Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
+
+Uses the link type specified by your Obsidian `"Files & Links" -> "Use [[Wikiliks]]"` setting.
 
 ## Hotkeys
 
