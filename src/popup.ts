@@ -9,7 +9,7 @@ import {
 	setIcon,
 } from "obsidian";
 import fuzzysort from "fuzzysort";
-import { AtSymbolLinkingSettings, LinkType } from "src/settings/settings";
+import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { highlightSearch } from "./utils";
 
 type fileOption = {
@@ -226,28 +226,18 @@ export default class SuggestionPopup extends EditorSuggest<
 				this.context.end
 			) || "";
 
-		let linkText = "";
-		if (this.settings.linkType === LinkType.WIKI_STYLE) {
-			let filePath = value.obj?.filePath;
-			if (filePath.endsWith(".md")) {
-				filePath = filePath.slice(0, -3);
-			}
-			linkText = `[[${filePath}|${
-				this.settings.includeSymbol ? "@" : ""
-			}${value.obj?.alias || value.obj?.fileName}]]`;
-		} else if (this.settings.linkType === LinkType.MARKDOWN_STYLE) {
-			const currentFile = this.app.workspace.getActiveFile();
-			const linkFile = this.app.vault.getAbstractFileByPath(
-				value.obj?.filePath
-			) as TFile;
-			linkText = this.app.fileManager.generateMarkdownLink(
-				linkFile,
-				currentFile?.path || ""
-			);
-			if (this.settings.includeSymbol) {
-				linkText = "[@" + linkText.substring(1);
-			}
-		}
+		const currentFile = this.app.workspace.getActiveFile();
+		const linkFile = this.app.vault.getAbstractFileByPath(
+			value.obj?.filePath
+		) as TFile;
+		let alias = value.obj?.alias || undefined;
+		if (this.settings.includeSymbol) alias = `@${alias || value.obj?.fileName}`;
+		let linkText = this.app.fileManager.generateMarkdownLink(
+			linkFile,
+			currentFile?.path || "",
+			undefined, // we don't care about the subpath
+			alias
+		);
 
 		this.context?.editor.replaceRange(
 			linkText,
