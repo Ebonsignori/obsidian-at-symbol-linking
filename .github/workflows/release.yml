@@ -44,7 +44,7 @@ jobs:
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
 
       - name: Commit version changes
-        uses: EndBug/add-and-commit@v1bad3abcf0d6ec49a5857d124b0bfb52dc7bb081
+        uses: EndBug/add-and-commit@1bad3abcf0d6ec49a5857d124b0bfb52dc7bb081
         with:
           default_author: github_actor
           add: 'manifest.json package.json package-lock.json'
