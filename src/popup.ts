@@ -5,6 +5,7 @@ import {
 	EditorSuggest,
 	EditorSuggestContext,
 	EditorSuggestTriggerInfo,
+	Notice,
 	TFile,
 	setIcon,
 } from "obsidian";
@@ -13,6 +14,8 @@ import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { highlightSearch } from "./utils";
 
 type fileOption = {
+	isCreateNewOption?: boolean;
+	query?: string;
 	fileName: string;
 	filePath: string;
 	alias?: string;
@@ -95,7 +98,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 
 		// Show all files when no query
-		let results;
+		let results = [];
 		if (!context.query) {
 			results = options
 				.map((option) => ({
@@ -108,6 +111,31 @@ export default class SuggestionPopup extends EditorSuggest<
 			results = fuzzysort.go(context.query, options, {
 				keys: ["alias", "fileName"],
 			}) as any;
+		}
+
+		// If showAddNewNote option is enabled, show it as the last option
+		if (this.settings.showAddNewNote && context.query) {
+			// Don't show if it has the same filename as an existing note
+			const hasExistingNote = results.some(
+				(result: Fuzzysort.KeysResult<fileOption>) =>
+					result?.obj?.fileName.toLowerCase() ===
+					context.query?.toLowerCase()
+			);
+			if (!hasExistingNote) {
+				results = results.filter(
+					(result: Fuzzysort.KeysResult<fileOption>) =>
+						!result.obj?.isCreateNewOption
+				);
+				const separator = this.settings.addNewNoteDirectory ? "/" : "";
+				results.push({
+					obj: {
+						isCreateNewOption: true,
+						query: context.query,
+						fileName: "Create new note",
+						filePath: `${this.settings.addNewNoteDirectory}${separator}${context.query}.md`,
+					},
+				});
+			}
 		}
 
 		return results;
@@ -216,7 +244,9 @@ export default class SuggestionPopup extends EditorSuggest<
 		el.appendChild(aux);
 	}
 
-	selectSuggestion(value: Fuzzysort.KeysResult<fileOption>): void {
+	async selectSuggestion(
+		value: Fuzzysort.KeysResult<fileOption>
+	): Promise<void> {
 		const line =
 			this.context?.editor.getRange(
 				{
@@ -226,10 +256,40 @@ export default class SuggestionPopup extends EditorSuggest<
 				this.context.end
 			) || "";
 
+		// When user selects "Create new note" option, create the note to link to
+		let linkFile;
+		if (value?.obj?.isCreateNewOption) {
+			let newNoteContents = "";
+			if (this.settings.addNewNoteTemplateFile) {
+				const fileTemplate = this.app.vault.getAbstractFileByPath(
+					`${this.settings.addNewNoteTemplateFile}.md`
+				) as TFile;
+				newNoteContents =
+					(await this.app.vault.read(fileTemplate)) || "";
+			}
+
+			try {
+				linkFile = await this.app.vault.create(
+					value.obj?.filePath,
+					newNoteContents
+				);
+				// Update the alias to the name for displaying the @ link
+				value.obj.alias = value.obj?.query;
+			} catch (error) {
+				new Notice(
+					`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
+					0
+				);
+				throw error;
+			}
+		}
+
 		const currentFile = this.app.workspace.getActiveFile();
-		const linkFile = this.app.vault.getAbstractFileByPath(
-			value.obj?.filePath
-		) as TFile;
+		if (!linkFile) {
+			linkFile = this.app.vault.getAbstractFileByPath(
+				value.obj?.filePath
+			) as TFile;
+		}
 		let alias = value.obj?.alias || value.obj?.fileName;
 		if (this.settings.includeSymbol) alias = `@${alias}`;
 		const linkText = this.app.fileManager.generateMarkdownLink(
@@ -244,6 +304,9 @@ export default class SuggestionPopup extends EditorSuggest<
 			{ line: this.context.start.line, ch: line.lastIndexOf("@") },
 			this.context.end
 		);
+
+		// Close suggestion popup
+		this.firstOpenedCursor = null;
 	}
 
 	selectNextItem(dir: SelectionDirection) {
