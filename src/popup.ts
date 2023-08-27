@@ -230,8 +230,8 @@ export default class SuggestionPopup extends EditorSuggest<
 		const linkFile = this.app.vault.getAbstractFileByPath(
 			value.obj?.filePath
 		) as TFile;
-		let alias = value.obj?.alias || undefined;
-		if (this.settings.includeSymbol) alias = `@${alias || value.obj?.fileName}`;
+		let alias = value.obj?.alias || value.obj?.fileName;
+		if (this.settings.includeSymbol) alias = `@${alias}`;
 		const linkText = this.app.fileManager.generateMarkdownLink(
 			linkFile,
 			currentFile?.path || "",
