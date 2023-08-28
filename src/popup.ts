@@ -151,13 +151,13 @@ export default class SuggestionPopup extends EditorSuggest<
 			{ ...cursor, ch: cursor.ch }
 		);
 
-		// When open and user enters space, or newline, or tab, close
+		// When open and user enters newline or tab, close
 		if (
 			this.firstOpenedCursor &&
-			(typedChar === " " || typedChar === "\n" || typedChar === "\t")
+			(typedChar === "\n" || typedChar === "\t")
 		) {
 			return this.closeSuggestion();
-		}
+		}	
 
 		// TODO: If user's cursor is inside a code block, don't attempt to link
 		// Is there an easy way to get state of cursor? Or do I have to parse the text?
@@ -180,6 +180,11 @@ export default class SuggestionPopup extends EditorSuggest<
 				...cursor,
 				ch: cursor.ch + 1,
 			});
+		}
+
+		// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
+		if (query.split(" ").length - 1 > this.settings.leavePopupOpenForXSpaces) {
+			return this.closeSuggestion();
 		}
 
 		// If query is empty or doesn't have valid filename characters, close
