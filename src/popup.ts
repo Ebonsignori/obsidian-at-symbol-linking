@@ -132,7 +132,7 @@ export default class SuggestionPopup extends EditorSuggest<
 						isCreateNewOption: true,
 						query: context.query,
 						fileName: "Create new note",
-						filePath: `${this.settings.addNewNoteDirectory}${separator}${context.query}.md`,
+						filePath: `${this.settings.addNewNoteDirectory.trim()}${separator}${context.query.trim()}.md`,
 					},
 				});
 			}
@@ -292,12 +292,16 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 		let alias = value.obj?.alias || value.obj?.fileName;
 		if (this.settings.includeSymbol) alias = `@${alias}`;
-		const linkText = this.app.fileManager.generateMarkdownLink(
+		let linkText = this.app.fileManager.generateMarkdownLink(
 			linkFile,
 			currentFile?.path || "",
 			undefined, // we don't care about the subpath
 			alias
 		);
+
+		if (linkText.includes('\n')) {
+			linkText = linkText.replace(/\n/g, '');
+		}
 
 		this.context?.editor.replaceRange(
 			linkText,
