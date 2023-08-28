@@ -1,6 +1,6 @@
 {
   "name": "at-symbol-linking",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "Adds ability to link with `@` (the At Symbol) in Obsidian. Can scope @ linking to a specific directory e.g. `/contacts`",
   "main": "main.js",
   "engines": {
