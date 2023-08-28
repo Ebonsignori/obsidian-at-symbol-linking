@@ -16,6 +16,8 @@ export interface AtSymbolLinkingSettings {
 	showAddNewNote: boolean;
 	addNewNoteTemplateFile: string;
 	addNewNoteDirectory: string;
+
+	leavePopupOpenForXSpaces: number;
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
@@ -25,6 +27,8 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	showAddNewNote: false,
 	addNewNoteTemplateFile: "",
 	addNewNoteDirectory: "",
+
+	leavePopupOpenForXSpaces: 0,
 };
 
 const arrayMove = <T>(array: T[], fromIndex: number, toIndex: number): void => {
@@ -57,7 +61,9 @@ export class SettingsTab extends PluginSettingTab {
 			"Include the @ symbol prefixing the final link text",
 			includeSymbolDesc.createEl("br"),
 			includeSymbolDesc.createEl("em", {
-				text: `E.g. [${this.plugin.settings.includeSymbol ? '@' : ''}evan](./evan)`
+				text: `E.g. [${
+					this.plugin.settings.includeSymbol ? "@" : ""
+				}evan](./evan)`,
 			})
 		);
 		new Setting(this.containerEl)
@@ -209,9 +215,7 @@ export class SettingsTab extends PluginSettingTab {
 			// Begin add new note directory
 			new Setting(this.containerEl)
 				.setName("Add new note folder")
-				.setDesc(
-					"Folder to create new notes in when using @ linking."
-				)
+				.setDesc("Folder to create new notes in when using @ linking.")
 				.addSearch((cb) => {
 					new FolderSuggest(this.app, cb.inputEl);
 					cb.setPlaceholder("No folder (root)")
@@ -227,6 +231,38 @@ export class SettingsTab extends PluginSettingTab {
 				});
 			// End add new note directory
 		}
+
+		new Setting(this.containerEl)
+			.setName("Suggestion popup behavior")
+			.setHeading();
+
+		// Begin leavePopupOpenForXSpaces option
+		const leavePopupOpenDesc = document.createDocumentFragment();
+		leavePopupOpenDesc.append(
+			`When @ linking, you might want to type a full name e.g. "Brandon Sanderson" without the popup closing.`,
+			leavePopupOpenDesc.createEl("br"),
+			leavePopupOpenDesc.createEl("em", {
+				text: "With this setting on you'll need to press escape, return/enter, or click outside the popup to close it.",
+			})
+		);
+		new Setting(this.containerEl)
+			.setName("Leave popup open for X spaces")
+			.setDesc(leavePopupOpenDesc)
+			.addText((text) => {
+				text.setPlaceholder("0")
+					.setValue(
+						this.plugin.settings.leavePopupOpenForXSpaces?.toString()
+					)
+					.onChange(async (value) => {
+						this.plugin.settings.leavePopupOpenForXSpaces =
+							parseInt(value, 10);
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.onblur = () => {
+					this.validate();
+				};
+			});
+		// End leavePopupOpenForXSpaces option
 	}
 
 	async validate() {
@@ -265,7 +301,7 @@ export class SettingsTab extends PluginSettingTab {
 				new Notice(
 					`Unable to find template file at path: ${settings.addNewNoteTemplateFile}.md`
 				);
-				return updateSetting("addNewNoteTemplateFile", "");
+				await updateSetting("addNewNoteTemplateFile", "");
 			}
 		}
 
@@ -277,8 +313,12 @@ export class SettingsTab extends PluginSettingTab {
 				new Notice(
 					`Unable to find folder for new notes at path: ${settings.addNewNoteDirectory}. Please add it if you want to create new notes in this folder.`
 				);
-				return updateSetting("addNewNoteDirectory", "");
+				await updateSetting("addNewNoteDirectory", "");
 			}
+		}
+
+		if (isNaN(parseInt(settings.leavePopupOpenForXSpaces.toString())) || settings.leavePopupOpenForXSpaces < 0) {
+			await updateSetting("leavePopupOpenForXSpaces", 0);
 		}
 	}
 }
