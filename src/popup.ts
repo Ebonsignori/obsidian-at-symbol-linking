@@ -306,7 +306,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		);
 
 		// Close suggestion popup
-		this.firstOpenedCursor = null;
+		this.closeSuggestion();
 	}
 
 	selectNextItem(dir: SelectionDirection) {
