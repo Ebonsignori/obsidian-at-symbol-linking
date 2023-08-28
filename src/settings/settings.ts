@@ -242,7 +242,7 @@ export class SettingsTab extends PluginSettingTab {
 			`When @ linking, you might want to type a full name e.g. "Brandon Sanderson" without the popup closing.`,
 			leavePopupOpenDesc.createEl("br"),
 			leavePopupOpenDesc.createEl("em", {
-				text: "With this setting on you'll need to press escape, return/enter, or click outside the popup to close it.",
+				text: "When set above 0, you'll need to press escape, return/enter, or type over X spaces to close the popup.",
 			})
 		);
 		new Setting(this.containerEl)
@@ -317,7 +317,10 @@ export class SettingsTab extends PluginSettingTab {
 			}
 		}
 
-		if (isNaN(parseInt(settings.leavePopupOpenForXSpaces.toString())) || settings.leavePopupOpenForXSpaces < 0) {
+		if (
+			isNaN(parseInt(settings.leavePopupOpenForXSpaces.toString())) ||
+			settings.leavePopupOpenForXSpaces < 0
+		) {
 			await updateSetting("leavePopupOpenForXSpaces", 0);
 		}
 	}
