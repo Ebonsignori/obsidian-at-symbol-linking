@@ -9,6 +9,7 @@ import {
 	TFile,
 	setIcon,
 } from "obsidian";
+import { syntaxTree } from "@codemirror/language";
 import fuzzysort from "fuzzysort";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { highlightSearch } from "./utils";
@@ -157,10 +158,34 @@ export default class SuggestionPopup extends EditorSuggest<
 			(typedChar === "\n" || typedChar === "\t")
 		) {
 			return this.closeSuggestion();
-		}	
+		}
 
-		// TODO: If user's cursor is inside a code block, don't attempt to link
-		// Is there an easy way to get state of cursor? Or do I have to parse the text?
+		// If user's cursor is inside a code block, don't attempt to link
+		let isInCodeBlock = false;
+		if ((editor as any)?.cm) {
+			const cm = (editor as any).cm;
+			const cursor = cm.state?.selection?.main as {
+				from: number;
+				to: number;
+			};
+			syntaxTree(cm.state).iterate({
+				from: cursor.from,
+				to: cursor.to,
+				enter(node) {
+					if (
+						node.type.name === "inline-code" ||
+						node.type.name?.includes("codeblock")
+					) {
+						isInCodeBlock = true;
+					}
+				},
+			});
+		}
+
+		// If already open, allow backticks to be part of file name
+		if (isInCodeBlock && !this.firstOpenedCursor) {
+			return null;
+		}
 
 		// Open suggestion when @ is typed
 		if (typedChar === "@") {
@@ -183,7 +208,10 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 
 		// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
-		if (query.split(" ").length - 1 > this.settings.leavePopupOpenForXSpaces) {
+		if (
+			query.split(" ").length - 1 >
+			this.settings.leavePopupOpenForXSpaces
+		) {
 			return this.closeSuggestion();
 		}
 
@@ -304,8 +332,8 @@ export default class SuggestionPopup extends EditorSuggest<
 			alias
 		);
 
-		if (linkText.includes('\n')) {
-			linkText = linkText.replace(/\n/g, '');
+		if (linkText.includes("\n")) {
+			linkText = linkText.replace(/\n/g, "");
 		}
 
 		this.context?.editor.replaceRange(

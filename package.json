@@ -31,6 +31,7 @@
     "typescript": "4.7.4"
   },
   "dependencies": {
+    "@codemirror/language": "^6.9.0",
     "@popperjs/core": "^2.11.8",
     "fuzzysort": "^2.0.4"
   }
