@@ -9,9 +9,9 @@ Supports [aliases](https://help.obsidian.md/Linking+notes+and+files/Aliases) (ni
 ## Settings
 
 - Limit `@` links to only source links from specific directories, like your `People/` directory.
-- Turn on compatibility mode to enable `@` link with other plugins that show suggestions like the [Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks).
+- Can create a new note from a template in a specified directory if no `@` link is found.
+- Turn on compatibility mode to enable `@` linking when plugins that show suggestions like the [Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks) are enabled.
 - Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
-- Can add the option to create a new note from a template in a specified directory if no `@` link is found.
 
 Uses the link type specified by your Obsidian `"Files & Links" -> "Use [[Wikiliks]]"` setting.
 
