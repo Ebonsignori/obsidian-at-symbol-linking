@@ -1,6 +1,6 @@
 // Code derived from https://github.com/tth05/obsidian-completr
 import { KeymapContext } from "obsidian";
-import { SelectionDirection } from "./popup";
+import { SelectionDirection } from "./suggest-popup";
 
 // Hacky override that lets us use hotkeys when the popup is open from completr
 export function applyHotKeyHack(_this: any, app: any) {

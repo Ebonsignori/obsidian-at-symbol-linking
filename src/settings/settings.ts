@@ -17,6 +17,7 @@ export interface AtSymbolLinkingSettings {
 	addNewNoteTemplateFile: string;
 	addNewNoteDirectory: string;
 
+	useCompatibilityMode: boolean;
 	leavePopupOpenForXSpaces: number;
 }
 
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	addNewNoteTemplateFile: "",
 	addNewNoteDirectory: "",
 
+	useCompatibilityMode: false,
 	leavePopupOpenForXSpaces: 0,
 };
 
@@ -235,6 +237,32 @@ export class SettingsTab extends PluginSettingTab {
 		new Setting(this.containerEl)
 			.setName("Suggestion popup behavior")
 			.setHeading();
+
+		// Begin useCompatibilityMode option
+		const useCompatibilityModeDesc = document.createDocumentFragment();
+		useCompatibilityModeDesc.append(
+			useCompatibilityModeDesc.createEl("strong", {
+				text: "You must restart Obsidian if you change this setting or you will experience bugs.",
+			}),
+			useCompatibilityModeDesc.createEl("br"),
+			"Renders HTML for the popup in place of the built-in Obsidian popup.",
+			useCompatibilityModeDesc.createEl("br"),
+			"Useful if you other plugins are interfering with the popup (e.g. the Tasks plugin)"
+		);
+		new Setting(this.containerEl)
+			.setName("Use compatibility mode")
+			.setDesc(useCompatibilityModeDesc)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.useCompatibilityMode)
+					.onChange((value: boolean) => {
+						this.plugin.settings.useCompatibilityMode = value;
+						this.plugin.saveSettings();
+						this.plugin.registerPopup();
+						this.display();
+					})
+			);
+		// End useCompatibilityMode option
 
 		// Begin leavePopupOpenForXSpaces option
 		const leavePopupOpenDesc = document.createDocumentFragment();
