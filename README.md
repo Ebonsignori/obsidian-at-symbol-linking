@@ -2,17 +2,18 @@
 
 ![Gif demo of using the @ symbol to link to a name in Persons/](./docs/at-symbol-linking-1.1.0.gif)
 
-Adds the ability to link using the `@` (the At Symbol) in [Obsidian](https://obsidian.md/). Can scope `@` linking to only source links from specific directories e.g. `Contacts/`.
+Adds the ability to link using the `@` (the At Symbol) in [Obsidian](https://obsidian.md/). Can limit `@` linking to to specific folders e.g. `People/`.
 
 Useful if you're used to using `@` to link to people in other tools like GitHub or Slack.
 
-I keep a directory of contacts in `People/` and whenever I want to reference them in a journal entry I link to them with `@` to distinguish them as people as opposed to files.
+Supports `aliases: []` from meta.
 
 ## Settings
 
-- Limit `@` links to only source links from specific directories, like your `Contacts/` directory.
+- Limit `@` links to only source links from specific directories, like your `People/` directory.
 - Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
 - Can add the option to create a new note from a template in a specified directory if no `@` link is found.
+- Turn on compatibility mode to enable `@` link with other plugins that show suggestions like the [Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks)
 
 Uses the link type specified by your Obsidian `"Files & Links" -> "Use [[Wikiliks]]"` setting.
 

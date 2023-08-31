@@ -45,3 +45,9 @@
 	display: flex;
 	align-items: center;
 }
+
+/* Manual extension */
+.extension-container-at-symbol-linking {
+	width: fit-content !important;
+	max-width: 500px;
+}

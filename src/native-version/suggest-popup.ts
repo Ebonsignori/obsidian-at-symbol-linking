@@ -12,15 +12,8 @@ import {
 import { syntaxTree } from "@codemirror/language";
 import fuzzysort from "fuzzysort";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
-import { highlightSearch } from "./utils";
-
-type fileOption = {
-	isCreateNewOption?: boolean;
-	query?: string;
-	fileName: string;
-	filePath: string;
-	alias?: string;
-};
+import { highlightSearch } from "../utils/highlight-search";
+import { fileOption } from "src/types";
 
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
@@ -30,6 +23,7 @@ export default class SuggestionPopup extends EditorSuggest<
 	private firstOpenedCursor: null | EditorPosition = null;
 	private focused = false;
 	private app: App;
+	public name = "@ Symbol Linking Suggest";
 
 	constructor(app: App, settings: AtSymbolLinkingSettings) {
 		super(app);
