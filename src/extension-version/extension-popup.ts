@@ -134,6 +134,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		} else {
 			this.suggestEl.addClass("extension-container-at-symbol-linking");
 		}
+		this.suggestEl.style.zIndex = "1000";
 		const suggestion = this.suggestEl.createDiv("suggestion");
 		this.suggest = new Suggest(this, suggestion, this.scope);
 
