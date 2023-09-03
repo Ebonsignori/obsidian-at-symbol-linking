@@ -155,7 +155,7 @@ class AtSymbolTriggerExtension implements PluginValue {
 				this.suggestionEl.style.top =
 					topOffset + lineElementHeight + "px";
 			} else {
-				this.suggestionEl.style.bottom = "0px";
+				this.suggestionEl.style.bottom = "var(--mobile-toolbar-height)";
 				this.suggestionEl.style.left = "0px";
 			}
 
