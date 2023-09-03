@@ -1,7 +1,7 @@
 import { syntaxTree } from "@codemirror/language";
 import { ViewPlugin } from "@codemirror/view";
 import type { PluginValue, EditorView, Rect } from "@codemirror/view";
-import type { App, EditorPosition } from "obsidian";
+import { Platform, type App, type EditorPosition } from "obsidian";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { LinkSuggest } from "./extension-popup";
 
@@ -132,26 +132,35 @@ class AtSymbolTriggerExtension implements PluginValue {
 		}
 
 		if (!this.suggestionEl && this.firstOpenedCursor && this.view) {
-			const { left: leftOffset, top: topOffset } = this.view.coordsAtPos(
-				(<EditorPosition>this.firstOpenedCursor)?.ch
-			) as Rect;
 			const container = (<any>this.app).dom.appContainerEl as HTMLElement;
-
 			this.suggestionEl = createDiv();
 			this.suggestionEl.style.position = "absolute";
-			this.suggestionEl.style.left = leftOffset + "px";
-			// const currentLineElement =
-			// 	container.getElementsByClassName("cm-active cm-line")?.[0];
-			// const lineElementHeight =
-			// 	currentLineElement?.getBoundingClientRect()?.height || 24;
-			const lineElementHeight = 24;
-			this.suggestionEl.style.top = topOffset + lineElementHeight + "px";
-			this.suggestionEl.style.width = "0px";
-			this.suggestionEl.style.height = "0px";
 			this.suggestionEl.style.zIndex = "1000";
 			this.suggestionEl.id = "at-symbol-suggestion";
+			this.suggestionEl.style.width = "0px";
+			this.suggestionEl.style.height = "0px";
+
+			if (Platform.isDesktop) {
+				const { left: leftOffset, top: topOffset } =
+					this.view.coordsAtPos(
+						(<EditorPosition>this.firstOpenedCursor)?.ch
+					) as Rect;
+
+				this.suggestionEl.style.left = leftOffset + "px";
+				// const currentLineElement =
+				// 	container.getElementsByClassName("cm-active cm-line")?.[0];
+				// const lineElementHeight =
+				// 	currentLineElement?.getBoundingClientRect()?.height || 24;
+				const lineElementHeight = 24;
+				this.suggestionEl.style.top =
+					topOffset + lineElementHeight + "px";
+			} else {
+				this.suggestionEl.style.bottom = "0px";
+				this.suggestionEl.style.left = "0px";
+			}
 
 			container.appendChild(this.suggestionEl);
+
 			this.suggestionPopup = new LinkSuggest(
 				this.app,
 				this.suggestionEl,
