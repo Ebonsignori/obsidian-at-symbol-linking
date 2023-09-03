@@ -1,5 +1,5 @@
 // Code derived from https://github.com/farux/obsidian-auto-note-mover
-import { App, Notice, Scope, setIcon } from "obsidian";
+import { App, Notice, Platform, Scope, setIcon } from "obsidian";
 import { createPopper, Instance as PopperInstance } from "@popperjs/core";
 import type { ISuggestOwner as IOwner, TFile } from "obsidian";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
@@ -129,7 +129,11 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		this.onSelect = onSelect;
 
 		this.suggestEl = createDiv("suggestion-container");
-		this.suggestEl.addClass("extension-container-at-symbol-linking");
+		if (Platform.isMobile) {
+			this.suggestEl.style.padding = "0";
+		} else {
+			this.suggestEl.addClass("extension-container-at-symbol-linking");
+		}
 		const suggestion = this.suggestEl.createDiv("suggestion");
 		this.suggest = new Suggest(this, suggestion, this.scope);
 
@@ -162,13 +166,15 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 
 		container.appendChild(this.suggestEl);
 		this.popper = createPopper(inputEl, this.suggestEl, {
-			placement: "bottom-start",
+			placement: Platform.isMobile ? "top" : "bottom-start",
 			modifiers: [
 				{
 					name: "flip",
 					options: {
 						flipVariations: false,
-						fallbackPlacements: ["right"],
+						fallbackPlacements: [
+							Platform.isMobile ? "top" : "right",
+						],
 					},
 				},
 				{
@@ -179,7 +185,9 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 						// first pass - positioning it according to the width of the popper
 						// second pass - position it with the width bound to the reference element
 						// we need to early exit to avoid an infinite loop
-						const targetWidth = `${state.rects.reference.width}px`;
+						const targetWidth = Platform.isMobile
+							? "100vw"
+							: `${state.rects.reference.width}px`;
 						if (state.styles.popper.width === targetWidth) {
 							return;
 						}
