@@ -358,6 +358,5 @@ function createHeading(el: HTMLElement, text: string, level = 2) {
 	const heading = el.createEl(`h${level}` as keyof HTMLElementTagNameMap, {
 		text,
 	});
-	heading.addClass("at-symbol-linking-heading");
 	return heading;
 }

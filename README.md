@@ -35,5 +35,5 @@ See [developer docs](docs/development.md) if you'd like to open a PR.
 
 The implementation borrows from:
 
+- [suggest.ts](./src/utils/suggest.ts), [file-suggest.ts](./src/settings/file-suggest.ts), [folder-suggest.ts](./src/settings/folder-suggest.ts), and [extension-popup.ts](./src/extension-version/extension-popup.ts) are derived from copyrighted works by [Liam Cain](https://github.com/liamcain), [obsidian-periodic-notes](https://github.com/liamcain/obsidian-periodic-notes).
 - [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
-- [auto-note-mover](https://github.com/farux/obsidian-auto-note-mover): For inspiration on how to accomplish folder, file, and compatibility mode suggesting in settings 
