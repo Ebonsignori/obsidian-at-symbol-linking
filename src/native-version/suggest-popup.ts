@@ -204,7 +204,9 @@ export default class SuggestionPopup extends EditorSuggest<
 		// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
 		if (
 			query.split(" ").length - 1 >
-			this.settings.leavePopupOpenForXSpaces
+				this.settings.leavePopupOpenForXSpaces ||
+			// Also close if query starts with a space, regardless of space settings
+			query.startsWith(" ")
 		) {
 			return this.closeSuggestion();
 		}
