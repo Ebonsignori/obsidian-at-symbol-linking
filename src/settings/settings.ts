@@ -198,7 +198,7 @@ export class SettingsTab extends PluginSettingTab {
 			newNoteTemplateDesc.append(
 				"Template to use when creating a new note from @ link.",
 				newNoteTemplateDesc.createEl("br"),
-				"Uses settings from the ",
+				"Uses formats from the ",
 				newNoteTemplateDesc.createEl("a", {
 					text: "core templates plugin",
 					href: "https://help.obsidian.md/Plugins/Templates",
