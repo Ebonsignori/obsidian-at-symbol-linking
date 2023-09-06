@@ -6,6 +6,8 @@ import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { fileOption } from "src/types";
 import { highlightSearch } from "src/utils/highlight-search";
 import fuzzysort from "fuzzysort";
+import { replaceNewFileVars } from "src/utils/replace-new-file-vars";
+import { fileNameNoExtension } from "src/utils/path";
 
 export class Suggest<T> {
 	private owner: IOwner<T>;
@@ -362,6 +364,12 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 				) as TFile;
 				newNoteContents =
 					(await this.app.vault.read(fileTemplate)) || "";
+				// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
+				newNoteContents = await replaceNewFileVars(
+					this.app,
+					newNoteContents,
+					fileNameNoExtension(value.obj?.filePath)
+				);
 			}
 
 			try {
