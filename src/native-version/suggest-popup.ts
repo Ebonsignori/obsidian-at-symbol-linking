@@ -14,6 +14,8 @@ import fuzzysort from "fuzzysort";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { highlightSearch } from "../utils/highlight-search";
 import { fileOption } from "src/types";
+import { replaceNewFileVars } from "src/utils/replace-new-file-vars";
+import { fileNameNoExtension } from "src/utils/path";
 
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
@@ -295,6 +297,12 @@ export default class SuggestionPopup extends EditorSuggest<
 				) as TFile;
 				newNoteContents =
 					(await this.app.vault.read(fileTemplate)) || "";
+				// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
+				newNoteContents = await replaceNewFileVars(
+					this.app,
+					newNoteContents,
+					fileNameNoExtension(value.obj?.filePath)
+				);
 			}
 
 			try {

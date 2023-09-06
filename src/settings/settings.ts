@@ -194,11 +194,35 @@ export class SettingsTab extends PluginSettingTab {
 
 		if (this.plugin.settings.showAddNewNote) {
 			// Begin add new note template folder
+			const newNoteTemplateDesc = document.createDocumentFragment();
+			newNoteTemplateDesc.append(
+				"Template to use when creating a new note from @ link.",
+				newNoteTemplateDesc.createEl("br"),
+				"Uses settings from the ",
+				newNoteTemplateDesc.createEl("a", {
+					text: "core templates plugin",
+					href: "https://help.obsidian.md/Plugins/Templates",
+				}),
+				" to replace the following variables in the template:",
+				newNoteTemplateDesc.createEl("br"),
+				newNoteTemplateDesc.createEl("code", {
+					text: "{{title}}",
+				}),
+				" - The title of the new file",
+				newNoteTemplateDesc.createEl("br"),
+				newNoteTemplateDesc.createEl("code", {
+					text: "{{date}}",
+				}),
+				" - The current date",
+				newNoteTemplateDesc.createEl("br"),
+				newNoteTemplateDesc.createEl("code", {
+					text: "{{time}}",
+				}),
+				" - The current time"
+			);
 			new Setting(this.containerEl)
 				.setName("Add new note template")
-				.setDesc(
-					"Template to use when creating a new note from @ link."
-				)
+				.setDesc(newNoteTemplateDesc)
 				.addSearch((cb) => {
 					new FileSuggest(this.app, cb.inputEl);
 					cb.setPlaceholder("No template (blank note)")
