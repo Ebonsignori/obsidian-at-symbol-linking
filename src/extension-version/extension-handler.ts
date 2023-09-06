@@ -126,7 +126,9 @@ class AtSymbolTriggerExtension implements PluginValue {
 		// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
 		if (
 			this.openQuery.split(" ").length - 1 >
-			this.settings.leavePopupOpenForXSpaces
+				this.settings.leavePopupOpenForXSpaces ||
+			// Also close if the query starts with a space, regardless of space settings
+			this.openQuery.startsWith(" ")
 		) {
 			return this.closeSuggestion();
 		}
