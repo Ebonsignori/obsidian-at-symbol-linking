@@ -4,9 +4,9 @@ import {
 	DEFAULT_SETTINGS,
 	SettingsTab,
 } from "./settings/settings";
-import SuggestionPopup from "./native-version/suggest-popup";
-import { applyHotKeyHack } from "./native-version/hotkeys";
-import { atSymbolTriggerExtension } from "./extension-version/extension-handler";
+import SuggestionPopup from "./native-suggestion/suggest-popup";
+import { applyHotKeyHack } from "./native-suggestion/hotkeys";
+import { atSymbolTriggerExtension } from "./compatibility-mode-extension/extension-handler";
 
 export default class AtSymbolLinking extends Plugin {
 	settings: AtSymbolLinkingSettings;
