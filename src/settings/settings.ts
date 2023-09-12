@@ -50,6 +50,11 @@ export class SettingsTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	// On close, reload the plugin
+	hide() {
+		this.plugin.reloadPlugin();
+	}
+
 	display(): void {
 		this.containerEl.empty();
 
@@ -265,13 +270,14 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin useCompatibilityMode option
 		const useCompatibilityModeDesc = document.createDocumentFragment();
 		useCompatibilityModeDesc.append(
-			useCompatibilityModeDesc.createEl("strong", {
-				text: "You must restart Obsidian if you change this setting or you will experience bugs.",
-			}),
 			useCompatibilityModeDesc.createEl("br"),
-			"Renders HTML for the popup in place of the built-in Obsidian popup.",
+			"Renders an HTML popup in place of the native Obsidian popup.",
 			useCompatibilityModeDesc.createEl("br"),
-			"Useful if you other plugins are interfering with the popup (e.g. the Tasks plugin)"
+			"Useful if you other plugins are interfering with the popup (e.g. the Tasks plugin).",
+			useCompatibilityModeDesc.createEl("br"),
+			useCompatibilityModeDesc.createEl("em", {
+				text: "May be slower than the native popup.",
+			})
 		);
 		new Setting(this.containerEl)
 			.setName("Use compatibility mode")

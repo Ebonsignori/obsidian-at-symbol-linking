@@ -72,10 +72,10 @@ export function applyHotKeyHack(_this: any, app: any) {
 						// Sends the event again, only keeping the modifiers which didn't activate this command
 						const event = new KeyboardEvent("keydown", {
 							key: hotkeyManager.defaultKeys[id][0].key,
-							ctrlKey: validMods.contains("Ctrl"),
-							shiftKey: validMods.contains("Shift"),
-							altKey: validMods.contains("Alt"),
-							metaKey: validMods.contains("Meta"),
+							ctrlKey: validMods?.contains("Ctrl"),
+							shiftKey: validMods?.contains("Shift"),
+							altKey: validMods?.contains("Alt"),
+							metaKey: validMods?.contains("Meta"),
 						});
 						e?.target?.dispatchEvent(event);
 						return false;
@@ -100,7 +100,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		editorCallback: () => {
 			_this._suggestionPopup.selectNextItem(SelectionDirection.NEXT);
 		},
-		isVisible: () => _this._suggestionPopup.isVisible(),
+		isVisible: () => _this._suggestionPopup?.isVisible(),
 	});
 	_this.addCommand({
 		id: "select-previous-suggestion",
@@ -115,7 +115,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		editorCallback: () => {
 			_this._suggestionPopup.selectNextItem(SelectionDirection.PREVIOUS);
 		},
-		isVisible: () => _this._suggestionPopup.isVisible(),
+		isVisible: () => _this._suggestionPopup?.isVisible(),
 	});
 	_this.addCommand({
 		id: "insert-selected-suggestion",
@@ -127,7 +127,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 			},
 		],
 		editorCallback: () => _this._suggestionPopup.applySelectedItem(),
-		isVisible: () => _this._suggestionPopup.isVisible(),
+		isVisible: () => _this._suggestionPopup?.isVisible(),
 	});
 	_this.addCommand({
 		id: "exit-suggestion",
@@ -139,6 +139,6 @@ export function applyHotKeyHack(_this: any, app: any) {
 			},
 		],
 		editorCallback: () => _this._suggestionPopup.closeSuggestion(),
-		isVisible: () => _this._suggestionPopup.isVisible(),
+		isVisible: () => _this._suggestionPopup?.isVisible(),
 	});
 }

@@ -138,6 +138,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		}
 		this.suggestEl.style.zIndex = "1000";
 		const suggestion = this.suggestEl.createDiv("suggestion");
+		suggestion.id = "at-symbol-suggestion-container";
 		this.suggest = new Suggest(this, suggestion, this.scope);
 
 		this.scope.register([], "Escape", this.close.bind(this));
@@ -313,6 +314,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		el.addClass("at-symbol-linking-suggestion");
 		const context = el.doc.createElement("div");
 		context.addClass("suggestion-context");
+		context.id = "at-symbol-suggestion-context";
 
 		// Add title with matching search terms bolded (highlighted)
 		const title = el.doc.createElement("div");
