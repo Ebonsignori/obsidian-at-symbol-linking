@@ -37,7 +37,10 @@ export default class AtSymbolLinking extends Plugin {
 				)
 			);
 		} else {
-			this._suggestionPopup = new SuggestionPopup(this.app, this.settings);
+			this._suggestionPopup = new SuggestionPopup(
+				this.app,
+				this.settings
+			);
 			this.registerEditorSuggest(this._suggestionPopup);
 			applyHotKeyHack(this, this.app);
 		}
@@ -45,14 +48,21 @@ export default class AtSymbolLinking extends Plugin {
 
 	// Since we can disable/enable modes that register and unregister an editor extension in settings
 	// We need to reload the plugin to unregister the existing extension when settings are changed
-	async reloadPlugin() {
+	async reloadPlugin(shouldReset: boolean) {
+		if (!shouldReset) {
+			return;
+		}
 		if (this.reloadingPlugins) return;
 		this.reloadingPlugins = true;
 
 		const plugins = (<any>this.app).plugins;
-		if (!plugins?.enabledPlugins?.has(this.manifest.id)) return;
+		if (!plugins?.enabledPlugins?.has(this.manifest.id)) {
+			return;
+		}
+
 		await plugins.disablePlugin(this.manifest.id);
 		try {
+			await new Promise((resolve) => setTimeout(resolve, 100));
 			await plugins.enablePlugin(this.manifest.id);
 		} catch (error) {
 			/* empty */
