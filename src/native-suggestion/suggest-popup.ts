@@ -128,10 +128,8 @@ export default class SuggestionPopup extends EditorSuggest<
 
 		// If query is empty or doesn't have valid filename characters, close
 		if (!query || !isValidFileNameCharacter(typedChar)) {
-			console.log("here");
 			return this.closeSuggestion();
 		}
-		console.log("here2");
 
 		return {
 			start: { ...cursor, ch: cursor.ch - 1 },
