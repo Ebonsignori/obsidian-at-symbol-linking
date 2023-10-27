@@ -4,6 +4,7 @@ import type { PluginValue, EditorView, Rect } from "@codemirror/view";
 import { Platform, type App, type EditorPosition } from "obsidian";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { LinkSuggest } from "./extension-popup";
+import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 
 // Max parents we will iterate through to determine if a click event is outside the suggestion popup
 const maxParentDepth = 5;
@@ -110,7 +111,6 @@ export function atSymbolTriggerExtension(
 				}
 
 				// Build query when open
-				const code = event.code.toLowerCase();
 				if (typedChar === "Backspace") {
 					if (this.openQuery.length === 0) {
 						return this.closeSuggestion();
@@ -118,14 +118,10 @@ export function atSymbolTriggerExtension(
 					this.openQuery = this.openQuery.slice(0, -1);
 				} else if (typedChar === "Escape") {
 					this.closeSuggestion();
-				} else if (
-					code.includes("key") ||
-					code.includes("digit") ||
-					code == "space"
-				) {
-					this.openQuery += typedChar;
-				} else {
+				} else if (!isValidFileNameCharacter(typedChar)) {
 					return false;
+				} else {
+					this.openQuery += typedChar;
 				}
 
 				// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close

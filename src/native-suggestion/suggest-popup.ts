@@ -12,6 +12,7 @@ import { fileOption } from "src/types";
 import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
 import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
 import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions";
+import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
@@ -126,14 +127,11 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 
 		// If query is empty or doesn't have valid filename characters, close
-		if (
-			!query ||
-			!/[a-z0-9\\$\\-\\_\\!\\%\\"\\'\\.\\,\\*\\&\\(\\)\\;\\{\\}\\+\\=\\~\\`\\?)]/i.test(
-				query
-			)
-		) {
+		if (!query || !isValidFileNameCharacter(typedChar)) {
+			console.log("here");
 			return this.closeSuggestion();
 		}
+		console.log("here2");
 
 		return {
 			start: { ...cursor, ch: cursor.ch - 1 },
