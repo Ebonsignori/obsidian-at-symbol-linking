@@ -111,6 +111,7 @@ export function atSymbolTriggerExtension(
 				}
 
 				// Build query when open
+				const key = event.key.toLowerCase();
 				if (typedChar === "Backspace") {
 					if (this.openQuery.length === 0) {
 						return this.closeSuggestion();
@@ -118,7 +119,15 @@ export function atSymbolTriggerExtension(
 					this.openQuery = this.openQuery.slice(0, -1);
 				} else if (typedChar === "Escape") {
 					this.closeSuggestion();
-				} else if (!isValidFileNameCharacter(typedChar)) {
+				} else if (
+					!isValidFileNameCharacter(typedChar) ||
+					event.altKey ||
+					event.metaKey ||
+					event.ctrlKey ||
+					key.includes("backspace") ||
+					key.includes("shift") ||
+					key.includes("arrow")
+				) {
 					return false;
 				} else {
 					this.openQuery += typedChar;
