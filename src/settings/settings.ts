@@ -10,8 +10,9 @@ import { FolderSuggest } from "./folder-suggest";
 import { FileSuggest } from "./file-suggest";
 
 export interface AtSymbolLinkingSettings {
-	limitLinkDirectories: Array<string>;
+	triggerSymbol: string;
 	includeSymbol: boolean;
+	limitLinkDirectories: Array<string>;
 
 	showAddNewNote: boolean;
 	addNewNoteTemplateFile: string;
@@ -22,6 +23,7 @@ export interface AtSymbolLinkingSettings {
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
+	triggerSymbol: "@",
 	limitLinkDirectories: [],
 	includeSymbol: true,
 
@@ -65,19 +67,40 @@ export class SettingsTab extends PluginSettingTab {
 			createHeading(this.containerEl, "At Symbol (@) Linking Settings")
 		);
 
+		// Begin triggerSymbol option: Determine which symbol triggers the popup
+		const triggerSymbolDesc = document.createDocumentFragment();
+		triggerSymbolDesc.append("Type this symbol to trigger the popup.");
+		new Setting(this.containerEl)
+			.setName("Trigger Symbol")
+			.setDesc(triggerSymbolDesc)
+			.addText((text) => {
+				text.setPlaceholder("@")
+					.setValue(this.plugin.settings.triggerSymbol)
+					.onChange((value: string) => {
+						this.plugin.settings.triggerSymbol = value;
+						this.plugin.saveSettings();
+					});
+				text.inputEl.onblur = () => {
+					this.display();
+					this.validate();
+				};
+			});
+
 		// Begin includeSymbol option: Determine whether to include @ symbol in link
 		const includeSymbolDesc = document.createDocumentFragment();
 		includeSymbolDesc.append(
-			"Include the @ symbol prefixing the final link text",
+			`Include the ${this.plugin.settings.triggerSymbol} symbol prefixing the final link text`,
 			includeSymbolDesc.createEl("br"),
 			includeSymbolDesc.createEl("em", {
 				text: `E.g. [${
-					this.plugin.settings.includeSymbol ? "@" : ""
+					this.plugin.settings.includeSymbol
+						? this.plugin.settings.triggerSymbol
+						: ""
 				}evan](./evan)`,
 			})
 		);
 		new Setting(this.containerEl)
-			.setName("Include @ symbol")
+			.setName(`Include ${this.plugin.settings.triggerSymbol} symbol`)
 			.setDesc(includeSymbolDesc)
 			.addToggle((toggle) =>
 				toggle
@@ -93,9 +116,9 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin limitLinksToFolders option: limit which folders links are sourced from
 		const ruleDesc = document.createDocumentFragment();
 		ruleDesc.append(
-			"@ linking will only source links from the following folders.",
+			`${this.plugin.settings.triggerSymbol} linking will only source links from the following folders.`,
 			ruleDesc.createEl("br"),
-			"For example, you might only want contacts in the Contacts/ folder to be linked when you type @.",
+			`For example, you might only want contacts in the Contacts/ folder to be linked when you type ${this.plugin.settings.triggerSymbol}.`,
 			ruleDesc.createEl("br"),
 			ruleDesc.createEl("em", {
 				text: "If no folders are added, links will be sourced from all folders.",
@@ -187,7 +210,7 @@ export class SettingsTab extends PluginSettingTab {
 		new Setting(this.containerEl)
 			.setName("Add new note if it doesn't exist")
 			.setDesc(
-				"If the note doesn't exist when @ linking, add an option to create the note."
+				`If the note doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the note.`
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -204,7 +227,7 @@ export class SettingsTab extends PluginSettingTab {
 			// Begin add new note template folder
 			const newNoteTemplateDesc = document.createDocumentFragment();
 			newNoteTemplateDesc.append(
-				"Template to use when creating a new note from @ link.",
+				`Template to use when creating a new note from ${this.plugin.settings.triggerSymbol} link.`,
 				newNoteTemplateDesc.createEl("br"),
 				"Uses formats from the ",
 				newNoteTemplateDesc.createEl("a", {
@@ -249,7 +272,9 @@ export class SettingsTab extends PluginSettingTab {
 			// Begin add new note directory
 			new Setting(this.containerEl)
 				.setName("Add new note folder")
-				.setDesc("Folder to create new notes in when using @ linking.")
+				.setDesc(
+					`Folder to create new notes in when using ${this.plugin.settings.triggerSymbol} linking.`
+				)
 				.addSearch((cb) => {
 					new FolderSuggest(this.app, cb.inputEl);
 					cb.setPlaceholder("No folder (root)")
@@ -301,7 +326,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin leavePopupOpenForXSpaces option
 		const leavePopupOpenDesc = document.createDocumentFragment();
 		leavePopupOpenDesc.append(
-			`When @ linking, you might want to type a full name e.g. "Brandon Sanderson" without the popup closing.`,
+			`When ${this.plugin.settings.triggerSymbol} linking, you might want to type a full name e.g. "Brandon Sanderson" without the popup closing.`,
 			leavePopupOpenDesc.createEl("br"),
 			leavePopupOpenDesc.createEl("em", {
 				text: "When set above 0, you'll need to press escape, return/enter, or type over X spaces to close the popup.",
@@ -339,6 +364,16 @@ export class SettingsTab extends PluginSettingTab {
 			return this.display();
 		};
 
+		// triggerSymbol should be a single character
+		if (settings.triggerSymbol.length !== 1) {
+			new Notice(`Trigger symbol must be a single character.`);
+			await updateSetting(
+				"triggerSymbol",
+				settings.triggerSymbol.length ? settings.triggerSymbol[0] : "@"
+			);
+		}
+
+		// Folders should exist
 		for (let i = 0; i < settings.limitLinkDirectories.length; i++) {
 			const folder = settings.limitLinkDirectories[i];
 			if (folder === "") {
@@ -355,6 +390,7 @@ export class SettingsTab extends PluginSettingTab {
 			}
 		}
 
+		// Template file should exist when add new note option is enabled
 		if (settings.showAddNewNote && settings.addNewNoteTemplateFile) {
 			const templateFile = this.app.vault.getAbstractFileByPath(
 				`${settings.addNewNoteTemplateFile}.md`
@@ -367,6 +403,7 @@ export class SettingsTab extends PluginSettingTab {
 			}
 		}
 
+		// Destination directory should exist when add new note option is enabled
 		if (settings.showAddNewNote && settings.addNewNoteDirectory) {
 			const templateFile = this.app.vault.getAbstractFileByPath(
 				`${settings.addNewNoteDirectory}`
@@ -379,6 +416,7 @@ export class SettingsTab extends PluginSettingTab {
 			}
 		}
 
+		// Leave popup open for X spaces should be a number
 		if (
 			isNaN(parseInt(settings.leavePopupOpenForXSpaces.toString())) ||
 			settings.leavePopupOpenForXSpaces < 0
