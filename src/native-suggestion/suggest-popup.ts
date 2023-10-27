@@ -5,17 +5,13 @@ import {
 	EditorSuggest,
 	EditorSuggestContext,
 	EditorSuggestTriggerInfo,
-	Notice,
-	TFile,
-	setIcon,
 } from "obsidian";
 import { syntaxTree } from "@codemirror/language";
-import fuzzysort from "fuzzysort";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
-import { highlightSearch } from "../utils/highlight-search";
 import { fileOption } from "src/types";
-import { replaceNewFileVars } from "src/utils/replace-new-file-vars";
-import { fileNameNoExtension } from "src/utils/path";
+import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
+import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
+import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions";
 
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
@@ -50,92 +46,8 @@ export default class SuggestionPopup extends EditorSuggest<
 	getSuggestions(
 		context: EditorSuggestContext
 	): Fuzzysort.KeysResult<fileOption>[] {
-		const options: fileOption[] = [];
-		for (const file of context.file.vault.getMarkdownFiles()) {
-			// If there are folders to limit links to, check if the file is in one of them
-			if (this.settings.limitLinkDirectories.length > 0) {
-				let isAllowed = false;
-				for (const folder of this.settings.limitLinkDirectories) {
-					if (file.path.startsWith(folder)) {
-						isAllowed = true;
-						break;
-					}
-				}
-				if (!isAllowed) {
-					continue;
-				}
-			}
-			const meta = app.metadataCache.getFileCache(file);
-			if (meta?.frontmatter?.alias) {
-				options.push({
-					fileName: file.basename,
-					filePath: file.path,
-					alias: meta.frontmatter.alias,
-				});
-			} else if (meta?.frontmatter?.aliases) {
-				let aliases = meta.frontmatter.aliases;
-				if (typeof meta.frontmatter.aliases === "string") {
-					aliases = meta.frontmatter.aliases
-						.split(",")
-						.map((s) => s.trim());
-				}
-				for (const alias of aliases) {
-					options.push({
-						fileName: file.basename,
-						filePath: file.path,
-						alias: alias,
-					});
-				}
-			}
-			// Include fileName without alias as well
-			options.push({
-				fileName: file.basename,
-				filePath: file.path,
-			});
-		}
-
-		// Show all files when no query
-		let results = [];
-		if (!context.query) {
-			results = options
-				.map((option) => ({
-					obj: option,
-				}))
-				// Reverse because filesystem is sorted alphabetically
-				.reverse();
-		} else {
-			// Fuzzy search files based on query
-			results = fuzzysort.go(context.query, options, {
-				keys: ["alias", "fileName"],
-			}) as any;
-		}
-
-		// If showAddNewNote option is enabled, show it as the last option
-		if (this.settings.showAddNewNote && context.query) {
-			// Don't show if it has the same filename as an existing note
-			const hasExistingNote = results.some(
-				(result: Fuzzysort.KeysResult<fileOption>) =>
-					result?.obj?.fileName.toLowerCase() ===
-					context.query?.toLowerCase()
-			);
-			if (!hasExistingNote) {
-				results = results.filter(
-					(result: Fuzzysort.KeysResult<fileOption>) =>
-						!result.obj?.isCreateNewOption
-				);
-				const separator = this.settings.addNewNoteDirectory ? "/" : "";
-				results.push({
-					obj: {
-						isCreateNewOption: true,
-						query: context.query,
-						fileName: "Create new note",
-						filePath: `${this.settings.addNewNoteDirectory.trim()}${separator}${context.query.trim()}.md`,
-					},
-				});
-			}
-		}
-
-		return results;
+		const files = context.file.vault.getMarkdownFiles();
+		return sharedGetSuggestions(files, context.query, this.settings);
 	}
 
 	onTrigger(
@@ -234,45 +146,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		value: Fuzzysort.KeysResult<fileOption>,
 		el: HTMLElement
 	): void {
-		el.addClass("at-symbol-linking-suggestion");
-		const context = el.doc.createElement("div");
-		context.addClass("suggestion-context");
-
-		// Add title with matching search terms bolded (highlighted)
-		const title = el.doc.createElement("div");
-		title.addClass("suggestion-title");
-		if (value[0]) {
-			highlightSearch(title, value[0]);
-		} else if (value.obj?.alias) {
-			title.setText(value.obj?.alias);
-		} else if (value[1]) {
-			highlightSearch(title, value[1]);
-		} else if (value.obj?.fileName) {
-			title.setText(value.obj?.fileName);
-		} else {
-			title.setText("");
-		}
-
-		const path = el.doc.createElement("div");
-		path.addClass("suggestion-path");
-		path.setText(value.obj?.filePath?.slice(0, -3));
-
-		context.appendChild(title);
-		context.appendChild(path);
-
-		const aux = el.doc.createElement("div");
-		aux.addClass("suggestion-aux");
-
-		if (value?.obj?.alias) {
-			const alias = el.doc.createElement("span");
-			alias.addClass("suggestion-flair");
-			alias.ariaLabel = "Alias";
-			setIcon(alias, "forward");
-			aux.appendChild(alias);
-		}
-
-		el.appendChild(context);
-		el.appendChild(aux);
+		sharedRenderSuggestion(value, el);
 	}
 
 	async selectSuggestion(
@@ -287,58 +161,11 @@ export default class SuggestionPopup extends EditorSuggest<
 				this.context.end
 			) || "";
 
-		// When user selects "Create new note" option, create the note to link to
-		let linkFile;
-		if (value?.obj?.isCreateNewOption) {
-			let newNoteContents = "";
-			if (this.settings.addNewNoteTemplateFile) {
-				const fileTemplate = this.app.vault.getAbstractFileByPath(
-					`${this.settings.addNewNoteTemplateFile}.md`
-				) as TFile;
-				newNoteContents =
-					(await this.app.vault.read(fileTemplate)) || "";
-				// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
-				newNoteContents = await replaceNewFileVars(
-					this.app,
-					newNoteContents,
-					fileNameNoExtension(value.obj?.filePath)
-				);
-			}
-
-			try {
-				linkFile = await this.app.vault.create(
-					value.obj?.filePath,
-					newNoteContents
-				);
-				// Update the alias to the name for displaying the @ link
-				value.obj.alias = value.obj?.query;
-			} catch (error) {
-				new Notice(
-					`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
-					0
-				);
-				throw error;
-			}
-		}
-
-		const currentFile = this.app.workspace.getActiveFile();
-		if (!linkFile) {
-			linkFile = this.app.vault.getAbstractFileByPath(
-				value.obj?.filePath
-			) as TFile;
-		}
-		let alias = value.obj?.alias || "";
-		if (this.settings.includeSymbol) alias = `@${alias || value.obj?.fileName}`;
-		let linkText = this.app.fileManager.generateMarkdownLink(
-			linkFile,
-			currentFile?.path || "",
-			undefined, // we don't care about the subpath
-			alias
+		const linkText = await sharedSelectSuggestion(
+			this.app,
+			this.settings,
+			value
 		);
-
-		if (linkText.includes("\n")) {
-			linkText = linkText.replace(/\n/g, "");
-		}
 
 		this.context?.editor.replaceRange(
 			linkText,
