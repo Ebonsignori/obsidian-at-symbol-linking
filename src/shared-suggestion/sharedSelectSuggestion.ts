@@ -49,7 +49,7 @@ export async function sharedSelectSuggestion(
 		) as TFile;
 	}
 	let alias = value.obj?.alias || "";
-	if (settings.includeSymbol) alias = `@${alias || value.obj?.fileName}`;
+	if (settings.includeSymbol) alias = `${settings.triggerSymbol}${alias || value.obj?.fileName}`;
 	let linkText = app.fileManager.generateMarkdownLink(
 		linkFile,
 		currentFile?.path || "",

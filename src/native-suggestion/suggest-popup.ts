@@ -96,8 +96,8 @@ export default class SuggestionPopup extends EditorSuggest<
 			return null;
 		}
 
-		// Open suggestion when @ is typed
-		if (typedChar === "@") {
+		// Open suggestion when trigger is typed
+		if (typedChar === this.settings.triggerSymbol) {
 			this.firstOpenedCursor = cursor;
 			return {
 				start: { ...cursor, ch: cursor.ch - 1 },
@@ -167,7 +167,7 @@ export default class SuggestionPopup extends EditorSuggest<
 
 		this.context?.editor.replaceRange(
 			linkText,
-			{ line: this.context.start.line, ch: line.lastIndexOf("@") },
+			{ line: this.context.start.line, ch: line.lastIndexOf(this.settings.triggerSymbol) },
 			this.context.end
 		);
 

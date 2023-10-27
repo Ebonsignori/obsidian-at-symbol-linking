@@ -104,7 +104,7 @@ export function atSymbolTriggerExtension(
 					return false;
 				}
 
-				if (!this.isOpen && typedChar === "@") {
+				if (!this.isOpen && typedChar === settings.triggerSymbol) {
 					return this.openSuggestion();
 				} else if (!this.isOpen) {
 					return false;
