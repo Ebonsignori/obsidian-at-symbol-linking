@@ -44,15 +44,18 @@ const arrayMove = <T>(array: T[], fromIndex: number, toIndex: number): void => {
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: AtSymbolLinking;
+	shouldReset: boolean;
 
 	constructor(app: App, plugin: AtSymbolLinking) {
 		super(app, plugin);
 		this.plugin = plugin;
+		this.shouldReset = false;
 	}
 
 	// On close, reload the plugin
 	hide() {
-		this.plugin.reloadPlugin();
+		this.plugin.reloadPlugin(this.shouldReset);
+		this.shouldReset = false;
 	}
 
 	display(): void {
@@ -286,6 +289,7 @@ export class SettingsTab extends PluginSettingTab {
 				toggle
 					.setValue(this.plugin.settings.useCompatibilityMode)
 					.onChange((value: boolean) => {
+						this.shouldReset = true;
 						this.plugin.settings.useCompatibilityMode = value;
 						this.plugin.saveSettings();
 						this.plugin.registerPopup();
