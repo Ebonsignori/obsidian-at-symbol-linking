@@ -31,6 +31,7 @@ export async function replaceNewFileVars(
 			`@ Symbol Linking: Unable to read core plugin templates config at path: ${coreTemplatesConfigPath}`
 		);
 		console.log(error);
+		return templateContent;
 	}
 
 	let dateFormat = "YYYY-MM-DD";
