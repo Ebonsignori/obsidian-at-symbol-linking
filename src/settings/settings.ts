@@ -20,6 +20,7 @@ export interface AtSymbolLinkingSettings {
 
 	useCompatibilityMode: boolean;
 	leavePopupOpenForXSpaces: number;
+	useUnicodeName: boolean;
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
@@ -33,6 +34,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 
 	useCompatibilityMode: false,
 	leavePopupOpenForXSpaces: 0,
+	useUnicodeName: false,
 };
 
 const arrayMove = <T>(array: T[], fromIndex: number, toIndex: number): void => {
@@ -349,6 +351,18 @@ export class SettingsTab extends PluginSettingTab {
 					this.validate();
 				};
 			});
+		new Setting(this.containerEl)
+			.setName("Use Unicode for name")
+			.setDesc("Use any kind of letter from any language for filename.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.useUnicodeName)
+					.onChange((value: boolean) => {
+						this.plugin.settings.useUnicodeName = value;
+						this.plugin.saveSettings();
+						this.display();
+					})
+			);
 		// End leavePopupOpenForXSpaces option
 	}
 

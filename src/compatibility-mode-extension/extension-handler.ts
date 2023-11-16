@@ -120,7 +120,7 @@ export function atSymbolTriggerExtension(
 				} else if (typedChar === "Escape") {
 					this.closeSuggestion();
 				} else if (
-					!isValidFileNameCharacter(typedChar) ||
+					!isValidFileNameCharacter(typedChar, settings.useUnicodeName) ||
 					event.altKey ||
 					event.metaKey ||
 					event.ctrlKey ||
