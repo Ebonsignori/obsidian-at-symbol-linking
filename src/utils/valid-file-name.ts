@@ -1,12 +1,11 @@
-const validCharRegex =
-	/[a-z0-9\\$\\-\\_\\!\\%\\"\\'\\.\\,\\*\\&\\@\\(\\)\\;\\{\\}\\+\\=\\~\\`\\?\\<\\>)]/i;
+import { AtSymbolLinkingSettings } from "src/settings/settings";
 
-export const isValidFileNameCharacter = (char: string) => {
+export const isValidFileNameCharacter = (char: string, settings: AtSymbolLinkingSettings) => {
 	if (char === " ") {
 		return true;
 	}
 	if (char === "\\") {
 		return false;
 	}
-	return validCharRegex.test(char);
+	return new RegExp(settings.validCharacterRegex).test(char);
 };

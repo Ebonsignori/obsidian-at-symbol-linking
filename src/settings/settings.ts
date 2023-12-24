@@ -20,6 +20,9 @@ export interface AtSymbolLinkingSettings {
 
 	useCompatibilityMode: boolean;
 	leavePopupOpenForXSpaces: number;
+
+	validCharacterRegex: string;
+	validCharacterRegexFlags: string;
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
@@ -33,6 +36,9 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 
 	useCompatibilityMode: false,
 	leavePopupOpenForXSpaces: 0,
+
+	validCharacterRegex: `[a-z0-9$-_!%"'.,*&@()/;{}<>?~\`=+]`,
+	validCharacterRegexFlags: "i",
 };
 
 const arrayMove = <T>(array: T[], fromIndex: number, toIndex: number): void => {
@@ -346,9 +352,61 @@ export class SettingsTab extends PluginSettingTab {
 				};
 			});
 		// End leavePopupOpenForXSpaces option
+
+		new Setting(this.containerEl).setName("Advanced settings").setHeading();
+
+		// Begin valid character regex option
+		const validCharacterRegexDesc = document.createDocumentFragment();
+		validCharacterRegexDesc.append(
+			"JavaScript Regular Expression used to determine if a character in autocomplete is valid for looking up or creating new files.",
+			validCharacterRegexDesc.createEl("br"),
+			"Characters typed that don't match this regex will not be included in the final search query in compatibility mode.",
+			validCharacterRegexDesc.createEl("br"),
+			"In normal mode, the popup will close when an invalid character is typed."
+		);
+
+		new Setting(this.containerEl)
+			.setName("Valid character Regex")
+			.setDesc(validCharacterRegexDesc)
+			.addText((text) => {
+				text.setPlaceholder(this.plugin.settings.validCharacterRegex)
+					.setValue(this.plugin.settings.validCharacterRegex)
+					.onChange(async (value) => {
+						this.plugin.settings.validCharacterRegex = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.onblur = () => {
+					this.validate("validCharacterRegex");
+				};
+			});
+		// End valid character regex option
+
+		// Begin valid character regex flags option
+		const validCharacterRegexFlagsDesc = document.createDocumentFragment();
+		validCharacterRegexFlagsDesc.append(
+			"Flags to use with the valid character regex."
+		);
+
+		new Setting(this.containerEl)
+			.setName("Valid character Regex flags")
+			.setDesc(validCharacterRegexFlagsDesc)
+			.addText((text) => {
+				text.setPlaceholder(
+					this.plugin.settings.validCharacterRegexFlags
+				)
+					.setValue(this.plugin.settings.validCharacterRegexFlags)
+					.onChange(async (value) => {
+						this.plugin.settings.validCharacterRegexFlags = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.onblur = () => {
+					this.validate("validCharacterRegexFlags");
+				};
+			});
+		// End valid character regex flags option
 	}
 
-	async validate() {
+	async validate(editedSetting?: string) {
 		const settings = this.plugin.settings;
 		const updateSetting = async (
 			setting: keyof AtSymbolLinkingSettings,
@@ -418,6 +476,33 @@ export class SettingsTab extends PluginSettingTab {
 			settings.leavePopupOpenForXSpaces < 0
 		) {
 			await updateSetting("leavePopupOpenForXSpaces", 0);
+		}
+
+		// Regex should be valid and not be empty
+		if (settings.validCharacterRegex?.trim() === "") {
+			await updateSetting(
+				"validCharacterRegex",
+				DEFAULT_SETTINGS.validCharacterRegex
+			);
+		}
+		try {
+			new RegExp(
+				settings.validCharacterRegex,
+				settings.validCharacterRegexFlags
+			);
+		} catch (e) {
+			new Notice(`Invalid regex or flags`);
+			if (editedSetting === "validCharacterRegex") {
+				await updateSetting(
+					"validCharacterRegex",
+					DEFAULT_SETTINGS.validCharacterRegex
+				);
+			} else if (editedSetting === "validCharacterRegexFlags") {
+				await updateSetting(
+					"validCharacterRegexFlags",
+					DEFAULT_SETTINGS.validCharacterRegexFlags
+				);
+			}
 		}
 	}
 }
