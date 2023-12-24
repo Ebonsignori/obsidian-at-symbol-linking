@@ -15,6 +15,20 @@ Supports [aliases](https://help.obsidian.md/Linking+notes+and+files/Aliases) (ni
 
 Uses the link type specified by your Obsidian `"Files & Links" -> "Use [[Wikiliks]]"` setting.
 
+<details>
+
+<summary>Supporting unicode characters in filenames </summary>
+
+If you'd like to support unicode or other non-standard characters in filenames, update the **Valid character Regex** option and **Valid character Regex flags** options to the values below:
+
+```
+Valid character Regex = [\p{Letter}0-9$-_!%"'.,*&@()/;{}<>?~\`=+]
+
+Valid character Regex flags = iu
+```
+
+</details>
+
 ## Hotkeys
 
 Supports `up`, `down`, `enter`, and `escape` keys for navigating the link search popup.

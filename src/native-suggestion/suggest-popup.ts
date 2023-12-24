@@ -127,7 +127,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 
 		// If query is empty or doesn't have valid filename characters, close
-		if (!query || !isValidFileNameCharacter(typedChar)) {
+		if (!query || !isValidFileNameCharacter(typedChar, this.settings)) {
 			return this.closeSuggestion();
 		}
 
