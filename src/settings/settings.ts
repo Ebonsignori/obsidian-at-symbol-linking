@@ -63,10 +63,6 @@ export class SettingsTab extends PluginSettingTab {
 	display(): void {
 		this.containerEl.empty();
 
-		this.containerEl.appendChild(
-			createHeading(this.containerEl, "At Symbol (@) Linking Settings")
-		);
-
 		// Begin triggerSymbol option: Determine which symbol triggers the popup
 		const triggerSymbolDesc = document.createDocumentFragment();
 		triggerSymbolDesc.append("Type this symbol to trigger the popup.");
@@ -424,11 +420,4 @@ export class SettingsTab extends PluginSettingTab {
 			await updateSetting("leavePopupOpenForXSpaces", 0);
 		}
 	}
-}
-
-function createHeading(el: HTMLElement, text: string, level = 2) {
-	const heading = el.createEl(`h${level}` as keyof HTMLElementTagNameMap, {
-		text,
-	});
-	return heading;
 }
