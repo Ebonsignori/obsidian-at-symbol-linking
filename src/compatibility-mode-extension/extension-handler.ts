@@ -104,8 +104,10 @@ export function atSymbolTriggerExtension(
 					return false;
 				}
 
+				let justOpened = false;
 				if (!this.isOpen && typedChar === settings.triggerSymbol) {
-					return this.openSuggestion();
+					justOpened = true;
+					this.openSuggestion();
 				} else if (!this.isOpen) {
 					return false;
 				}
@@ -129,7 +131,7 @@ export function atSymbolTriggerExtension(
 					key.includes("arrow")
 				) {
 					return false;
-				} else {
+				} else if (!justOpened) {
 					this.openQuery += typedChar;
 				}
 
