@@ -26,7 +26,7 @@ Valid character Regex = [\p{Letter}0-9$-_!%"'.,*&@()/;{}<>?~\`=+]
 
 Valid character Regex flags = iu
 ```
-
+> Regex courtesy of @theotheo
 </details>
 
 ## Hotkeys
