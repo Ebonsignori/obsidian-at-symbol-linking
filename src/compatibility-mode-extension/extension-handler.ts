@@ -5,6 +5,7 @@ import { Platform, type App, type EditorPosition } from "obsidian";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { LinkSuggest } from "./extension-popup";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
+import { removeAccents } from "src/utils/remove-accents";
 
 // Max parents we will iterate through to determine if a click event is outside the suggestion popup
 const maxParentDepth = 5;
@@ -113,7 +114,7 @@ export function atSymbolTriggerExtension(
 				}
 
 				// Build query when open
-				const key = event.key.toLowerCase();
+				const key = event.key.toLocaleLowerCase();
 				if (typedChar === "Backspace") {
 					if (this.openQuery.length === 0) {
 						return this.closeSuggestion();
@@ -143,6 +144,10 @@ export function atSymbolTriggerExtension(
 					this.openQuery.startsWith(" ")
 				) {
 					return this.closeSuggestion();
+				}
+
+				if (settings.removeAccents) {
+					this.openQuery = removeAccents(this.openQuery);
 				}
 
 				if (!this.suggestionEl && this.firstOpenedCursor && this.view) {

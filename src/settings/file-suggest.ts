@@ -6,7 +6,7 @@ import { TextInputSuggest } from "../utils/suggest";
 export class FileSuggest extends TextInputSuggest<Fuzzysort.KeyResult<TFile>> {
 	getSuggestions(inputStr: string): Fuzzysort.KeyResult<TFile>[] {
 		let abstractFiles = this.app.vault.getAllLoadedFiles();
-		const lowerCaseInputStr = inputStr.toLowerCase();
+		const lowerCaseInputStr = inputStr.toLocaleLowerCase();
 
 		abstractFiles = abstractFiles.filter((file) => {
 			return file.path.endsWith(".md");

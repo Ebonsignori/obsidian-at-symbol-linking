@@ -13,6 +13,7 @@ import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSugges
 import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
 import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
+import { removeAccents } from "src/utils/remove-accents";
 
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
@@ -134,7 +135,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		return {
 			start: { ...cursor, ch: cursor.ch - 1 },
 			end: cursor,
-			query,
+			query: this.settings.removeAccents ? removeAccents(query) : query,
 		};
 	}
 
@@ -165,7 +166,10 @@ export default class SuggestionPopup extends EditorSuggest<
 
 		this.context?.editor.replaceRange(
 			linkText,
-			{ line: this.context.start.line, ch: line.lastIndexOf(this.settings.triggerSymbol) },
+			{
+				line: this.context.start.line,
+				ch: line.lastIndexOf(this.settings.triggerSymbol),
+			},
 			this.context.end
 		);
 
