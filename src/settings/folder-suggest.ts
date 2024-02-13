@@ -9,12 +9,12 @@ export class FolderSuggest extends TextInputSuggest<
 	getSuggestions(inputStr: string): Fuzzysort.KeyResult<TFolder>[] {
 		const abstractFiles = this.app.vault.getAllLoadedFiles();
 		const folders: TFolder[] = [];
-		const lowerCaseInputStr = inputStr.toLowerCase();
+		const lowerCaseInputStr = inputStr.toLocaleLowerCase();
 
 		abstractFiles.forEach((folder: TAbstractFile) => {
 			if (
 				folder instanceof TFolder &&
-				folder.path.toLowerCase()?.contains(lowerCaseInputStr)
+				folder.path.toLocaleLowerCase()?.contains(lowerCaseInputStr)
 			) {
 				folders.push(folder);
 			}

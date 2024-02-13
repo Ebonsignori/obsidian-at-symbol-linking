@@ -20,7 +20,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		/* Original isMatch function:
             var n = e.modifiers
                 , i = e.key;
-            return (null === n || n === t.modifiers) && (!i || (i === t.vkey || !(!t.key || i.toLowerCase() !== t.key.toLowerCase())))
+            return (null === n || n === t.modifiers) && (!i || (i === t.vkey || !(!t.key || i.toLocaleLowerCase() !== t.key.toLocaleLowerCase())))
             */
 
 		const modifiers = hotkey.modifiers,
@@ -35,7 +35,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 		return (
 			!key ||
 			key === context.vkey ||
-			!(!context.key || key.toLowerCase() !== context.key.toLowerCase())
+			!(!context.key || key.toLocaleLowerCase() !== context.key.toLocaleLowerCase())
 		);
 	};
 	_this.app.scope.register(

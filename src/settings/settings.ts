@@ -21,8 +21,10 @@ export interface AtSymbolLinkingSettings {
 	useCompatibilityMode: boolean;
 	leavePopupOpenForXSpaces: number;
 
-	validCharacterRegex: string;
-	validCharacterRegexFlags: string;
+	invalidCharacterRegex: string;
+	invalidCharacterRegexFlags: string;
+
+	removeAccents: boolean;
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
@@ -37,8 +39,11 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	useCompatibilityMode: false,
 	leavePopupOpenForXSpaces: 0,
 
-	validCharacterRegex: `[a-z0-9$-_!%"'.,*&@()/;{}<>?~\`=+]`,
-	validCharacterRegexFlags: "i",
+	// eslint-disable-next-line no-useless-escape
+	invalidCharacterRegex: `[\[\]^|#]`,
+	invalidCharacterRegexFlags: "i",
+
+	removeAccents: true,
 };
 
 const arrayMove = <T>(array: T[], fromIndex: number, toIndex: number): void => {
@@ -355,55 +360,70 @@ export class SettingsTab extends PluginSettingTab {
 
 		new Setting(this.containerEl).setName("Advanced settings").setHeading();
 
-		// Begin valid character regex option
-		const validCharacterRegexDesc = document.createDocumentFragment();
-		validCharacterRegexDesc.append(
-			"JavaScript Regular Expression used to determine if a character in autocomplete is valid for looking up or creating new files.",
-			validCharacterRegexDesc.createEl("br"),
-			"Characters typed that don't match this regex will not be included in the final search query in compatibility mode.",
-			validCharacterRegexDesc.createEl("br"),
+		// Begin invalid character regex option
+		const invalidCharacterRegexDesc = document.createDocumentFragment();
+		invalidCharacterRegexDesc.append(
+			invalidCharacterRegexDesc.createEl("br"),
+			"Characters typed that match this regex will not be included in the final search query in compatibility mode.",
+			invalidCharacterRegexDesc.createEl("br"),
 			"In normal mode, the popup will close when an invalid character is typed."
 		);
 
 		new Setting(this.containerEl)
-			.setName("Valid character Regex")
-			.setDesc(validCharacterRegexDesc)
+			.setName("Invalid character Regex")
+			.setDesc(invalidCharacterRegexDesc)
 			.addText((text) => {
-				text.setPlaceholder(this.plugin.settings.validCharacterRegex)
-					.setValue(this.plugin.settings.validCharacterRegex)
+				text.setPlaceholder(this.plugin.settings.invalidCharacterRegex)
+					.setValue(this.plugin.settings.invalidCharacterRegex)
 					.onChange(async (value) => {
-						this.plugin.settings.validCharacterRegex = value;
+						this.plugin.settings.invalidCharacterRegex = value;
 						await this.plugin.saveSettings();
 					});
 				text.inputEl.onblur = () => {
-					this.validate("validCharacterRegex");
+					this.validate("invalidCharacterRegex");
 				};
 			});
 		// End valid character regex option
 
 		// Begin valid character regex flags option
-		const validCharacterRegexFlagsDesc = document.createDocumentFragment();
-		validCharacterRegexFlagsDesc.append(
-			"Flags to use with the valid character regex."
+		const invalidCharacterRegexFlagsDesc =
+			document.createDocumentFragment();
+		invalidCharacterRegexFlagsDesc.append(
+			"Flags to use with the invalid character regex."
 		);
 
 		new Setting(this.containerEl)
-			.setName("Valid character Regex flags")
-			.setDesc(validCharacterRegexFlagsDesc)
+			.setName("Invalid character Regex flags")
+			.setDesc(invalidCharacterRegexFlagsDesc)
 			.addText((text) => {
 				text.setPlaceholder(
-					this.plugin.settings.validCharacterRegexFlags
+					this.plugin.settings.invalidCharacterRegexFlags
 				)
-					.setValue(this.plugin.settings.validCharacterRegexFlags)
+					.setValue(this.plugin.settings.invalidCharacterRegexFlags)
 					.onChange(async (value) => {
-						this.plugin.settings.validCharacterRegexFlags = value;
+						this.plugin.settings.invalidCharacterRegexFlags = value;
 						await this.plugin.saveSettings();
 					});
 				text.inputEl.onblur = () => {
-					this.validate("validCharacterRegexFlags");
+					this.validate("invalidCharacterRegexFlags");
 				};
 			});
 		// End valid character regex flags option
+
+		// Begin remove accents option
+		new Setting(this.containerEl)
+			.setName("Remove accents from search query")
+			.setDesc(
+				"e.g. é -> e when searching or creating links via the popup."
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.removeAccents)
+					.onChange((value: boolean) => {
+						this.plugin.settings.removeAccents = value;
+						this.plugin.saveSettings();
+					})
+			);
 	}
 
 	async validate(editedSetting?: string) {
@@ -479,28 +499,28 @@ export class SettingsTab extends PluginSettingTab {
 		}
 
 		// Regex should be valid and not be empty
-		if (settings.validCharacterRegex?.trim() === "") {
+		if (settings.invalidCharacterRegex?.trim() === "") {
 			await updateSetting(
-				"validCharacterRegex",
-				DEFAULT_SETTINGS.validCharacterRegex
+				"invalidCharacterRegex",
+				DEFAULT_SETTINGS.invalidCharacterRegex
 			);
 		}
 		try {
 			new RegExp(
-				settings.validCharacterRegex,
-				settings.validCharacterRegexFlags
+				settings.invalidCharacterRegex,
+				settings.invalidCharacterRegexFlags
 			);
 		} catch (e) {
 			new Notice(`Invalid regex or flags`);
-			if (editedSetting === "validCharacterRegex") {
+			if (editedSetting === "invalidCharacterRegex") {
 				await updateSetting(
-					"validCharacterRegex",
-					DEFAULT_SETTINGS.validCharacterRegex
+					"invalidCharacterRegex",
+					DEFAULT_SETTINGS.invalidCharacterRegex
 				);
-			} else if (editedSetting === "validCharacterRegexFlags") {
+			} else if (editedSetting === "invalidCharacterRegexFlags") {
 				await updateSetting(
-					"validCharacterRegexFlags",
-					DEFAULT_SETTINGS.validCharacterRegexFlags
+					"invalidCharacterRegexFlags",
+					DEFAULT_SETTINGS.invalidCharacterRegexFlags
 				);
 			}
 		}

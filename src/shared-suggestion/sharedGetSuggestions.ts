@@ -2,6 +2,7 @@ import fuzzysort from "fuzzysort";
 import { type TFile } from "obsidian";
 import { type AtSymbolLinkingSettings } from "src/settings/settings";
 import { type fileOption } from "src/types";
+import { removeAccents } from "src/utils/remove-accents";
 
 export function sharedGetSuggestions(
 	files: TFile[],
@@ -26,7 +27,9 @@ export function sharedGetSuggestions(
 		const meta = app.metadataCache.getFileCache(file);
 		if (meta?.frontmatter?.alias) {
 			options.push({
-				fileName: file.basename,
+				fileName: settings.removeAccents
+					? removeAccents(file.basename)
+					: file.basename,
 				filePath: file.path,
 				alias: meta.frontmatter.alias,
 			});
@@ -39,15 +42,21 @@ export function sharedGetSuggestions(
 			}
 			for (const alias of aliases) {
 				options.push({
-					fileName: file.basename,
+					fileName: settings.removeAccents
+						? removeAccents(file.basename)
+						: file.basename,
 					filePath: file.path,
-					alias: alias,
+					alias: settings.removeAccents
+						? removeAccents(alias)
+						: alias,
 				});
 			}
 		}
 		// Include fileName without alias as well
 		options.push({
-			fileName: file.basename,
+			fileName: settings.removeAccents
+				? removeAccents(file.basename)
+				: file.basename,
 			filePath: file.path,
 		});
 	}
@@ -73,7 +82,8 @@ export function sharedGetSuggestions(
 		// Don't show if it has the same filename as an existing note
 		const hasExistingNote = results.some(
 			(result: Fuzzysort.KeysResult<fileOption>) =>
-				result?.obj?.fileName.toLowerCase() === query?.toLowerCase()
+				result?.obj?.fileName.toLocaleLowerCase() ===
+				query?.toLocaleLowerCase()
 		);
 		if (!hasExistingNote) {
 			results = results.filter(
