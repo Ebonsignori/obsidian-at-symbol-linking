@@ -97,6 +97,7 @@ export default class SuggestionPopup extends EditorSuggest<
 			return null;
 		}
 
+
 		// Open suggestion when trigger is typed
 		if (typedChar === this.settings.triggerSymbol) {
 			this.firstOpenedCursor = cursor;
@@ -113,7 +114,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		} else {
 			query = editor.getRange(this.firstOpenedCursor, {
 				...cursor,
-				ch: cursor.ch + 1,
+				ch: cursor.ch,
 			});
 		}
 
