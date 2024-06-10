@@ -9,7 +9,7 @@ Supports [aliases](https://help.obsidian.md/Linking+notes+and+files/Aliases) (ni
 ## Settings
 You can limit `@` links to:
 	- From specific directories, like your `People/` directory.
-	- **Or** from a single file, like your `People.md` file. You can configure the level heading using the slider.
+	- **Or** from **specific files**, like your `People.md` file. You can configure the level heading using the slider. 
 
 Depending of the previous settings, the creation of a not found `@` link will:
 	- Create a new note from a template in a specified directory (for directories linking)
