@@ -231,7 +231,7 @@ export class SettingsTab extends PluginSettingTab {
 			new Setting(this.containerEl)
 				.setName("Append as header if it doesn't exist")
 				.setDesc(
-					`If the header doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the header ${atTheLevel}.`
+					`If the header doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the header ${atTheLevel} in the end of the file.`
 				)
 				.addToggle((toggle) =>
 					toggle
