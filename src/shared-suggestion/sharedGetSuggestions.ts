@@ -116,11 +116,15 @@ export function sharedGetMonoFileSuggestion(
 	if (!file || !(file instanceof TFile)) return [];
 	const meta = app.metadataCache.getFileCache(file);
 	if (!meta || !meta.headings) return [];
-	const firstHeadings = meta.headings.filter(
-		(heading) => heading.level === 1
-	);
-	if (firstHeadings.length === 0) return [];
-	const options: fileOption[] = firstHeadings.map((heading) => ({
+	
+	let contactHeading = meta.headings;
+	if (settings.headerLevelForContact !== 0) {
+		contactHeading = contactHeading.filter(
+			(heading) => heading.level === settings.headerLevelForContact
+		);
+	}
+	if (contactHeading.length === 0) return [];
+	const options: fileOption[] = contactHeading.map((heading) => ({
 		fileName: heading.heading,
 		filePath: file.path,
 	}));
@@ -134,7 +138,7 @@ export function sharedGetMonoFileSuggestion(
 			keys: ["fileName"],
 		}) as any;
 	}
-	if (settings.happendAsHeader && query) {
+	if (settings.appendAsHeader && query) {
 		const hasExistingHeader = results.some(
 			(result: Fuzzysort.KeysResult<fileOption>) =>
 				result?.obj?.fileName.toLocaleLowerCase() ===

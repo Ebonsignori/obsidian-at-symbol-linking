@@ -15,7 +15,8 @@ export interface AtSymbolLinkingSettings {
 	includeSymbol: boolean;
 	limitLinkDirectories: Array<string>;
 	limitToOneFile: string;
-	happendAsHeader: boolean;
+	appendAsHeader: boolean;
+	headerLevelForContact: number;
 
 	showAddNewNote: boolean;
 	addNewNoteTemplateFile: string;
@@ -35,7 +36,8 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	limitLinkDirectories: [],
 	includeSymbol: true,
 	limitToOneFile: "",
-	happendAsHeader: false,
+	appendAsHeader: false,
+	headerLevelForContact: 1,
 
 	showAddNewNote: false,
 	addNewNoteTemplateFile: "",
@@ -124,11 +126,13 @@ export class SettingsTab extends PluginSettingTab {
 					})
 			);
 		// End includeSymbol option
-
+		// Start limitToOneFile option
+		const messageAboutLevel = this.plugin.settings.headerLevelForContact === 0 ? "include all headers" : `current heading level: ${this.plugin.settings.headerLevelForContact}`;
 		new Setting(this.containerEl)
 			.setName("Use one file for all links")
 			.setDesc(
-				"Limit to one files for contact linking, using the header (1st level) as the contact name."
+				`Limit to one files for contact linking, using the header (${messageAboutLevel}) as the contact name.
+				Leave blank to disable.`
 			)
 			.addSearch((cb) => {
 				new FileSuggestWithPath(this.app, cb.inputEl);
@@ -138,25 +142,53 @@ export class SettingsTab extends PluginSettingTab {
 						this.plugin.settings.limitToOneFile = newFile.trim();
 						await this.plugin.saveSettings();
 					});
+					
 				cb.inputEl.onblur = () => {
 					this.validate();
 					this.display();
 				};
+				cb.clearButtonEl.onclick = () => {
+					this.display();
+				};
+			})
+		
+			.addSlider((slider) => {
+				slider
+					.setLimits(0, 6, 1)
+					.setValue(this.plugin.settings.headerLevelForContact)
+					.onChange(async (value: number) => {
+						this.plugin.settings.headerLevelForContact = value;
+						await this.plugin.saveSettings();
+					});
+				slider.sliderEl.onmouseleave = () => {
+					this.display();
+				};
+				slider.sliderEl.ariaLabel = `Header level for contact name\nCurrent: ${this.plugin.settings.headerLevelForContact}`;
+				
 			});
+		// End limitToOneFile option
+
+		// Begin appendAsHeader option
+		const snRdTh = this.plugin.settings.headerLevelForContact === 2 ? "nd" : this.plugin.settings.headerLevelForContact === 3 ? "rd" : this.plugin.settings.headerLevelForContact === 1 ? "st" : "th";
+		const atTheLevel = this.plugin.settings.headerLevelForContact === 0 ? "at the 1st level" : `at the ${this.plugin.settings.headerLevelForContact}${snRdTh} level`;
 		if (this.plugin.settings.limitToOneFile.trim().length > 0) {
 			new Setting(this.containerEl)
-				.setName("Append as header")
+				.setName("Add new header")
+				.setHeading();
+			new Setting(this.containerEl)
+				.setName("Append as header if it doesn't exist")
 				.setDesc(
-					"Append the contact as a header in the file if not found."
+					`If the header doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the header ${atTheLevel}.`
 				)
 				.addToggle((toggle) =>
 					toggle
-						.setValue(this.plugin.settings.happendAsHeader)
+						.setValue(this.plugin.settings.appendAsHeader)
 						.onChange((value: boolean) => {
-							this.plugin.settings.happendAsHeader = value;
+							this.plugin.settings.appendAsHeader = value;
 							this.plugin.saveSettings();
 						})
 				);
+		// End appendAsHeader option
 		} else {
 			// Begin limitLinksToFolders option: limit which folders links are sourced from
 			const ruleDesc = document.createDocumentFragment();

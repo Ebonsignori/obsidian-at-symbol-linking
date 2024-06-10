@@ -23,7 +23,14 @@ export async function sharedSelectSuggestion(
 				);
 			}
 			//edit the file and add a new header
-			app.vault.append(file, `# ${value.obj?.query}\n`);
+			const headerLevel = "#".repeat(settings.headerLevelForContact <= 1 ? 1: settings.headerLevelForContact);
+			const newContent = `${headerLevel} ${value.obj?.query}\n`;
+			app.vault.process(file, (content) => {
+				if (content.endsWith("\n")) {
+					return `${content}${newContent}`;
+				}
+				return `${content}\n${newContent}`;
+			});
 		} else {
 			let newNoteContents = "";
 			if (settings.addNewNoteTemplateFile) {
