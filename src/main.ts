@@ -41,6 +41,7 @@ export default class AtSymbolLinking extends Plugin {
 				this.app,
 				this.settings
 			);
+			//@ts-ignore
 			this.registerEditorSuggest(this._suggestionPopup);
 			applyHotKeyHack(this, this.app);
 		}
