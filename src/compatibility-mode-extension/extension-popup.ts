@@ -6,7 +6,10 @@ import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { fileOption } from "src/types";
 import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
 import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
-import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions";
+import {
+	sharedGetMonoFileSuggestion,
+	sharedGetSuggestions,
+} from "src/shared-suggestion/sharedGetSuggestions";
 
 export class Suggest<T> {
 	private owner: IOwner<T>;
@@ -219,8 +222,12 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 	}
 
 	getSuggestions(query: string): Fuzzysort.KeysResult<fileOption>[] {
-		const files = this.app.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, query, this.settings, this.app);
+		if (this.settings.limitToOneFile.length > 0) {
+			return sharedGetMonoFileSuggestion(query, this.settings, this.app);
+		} else {
+			const files = this.app.vault.getMarkdownFiles();
+			return sharedGetSuggestions(files, query, this.settings, this.app);
+		}
 	}
 
 	renderSuggestion(

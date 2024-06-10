@@ -11,7 +11,10 @@ import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { fileOption } from "src/types";
 import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
 import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
-import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions";
+import {
+	sharedGetMonoFileSuggestion,
+	sharedGetSuggestions,
+} from "src/shared-suggestion/sharedGetSuggestions";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 import { removeAccents } from "src/utils/remove-accents";
 
@@ -49,6 +52,13 @@ export default class SuggestionPopup extends EditorSuggest<
 	getSuggestions(
 		context: EditorSuggestContext
 	): Fuzzysort.KeysResult<fileOption>[] {
+		if (this.settings.limitToOneFile.length > 0)
+			return sharedGetMonoFileSuggestion(
+				context.query,
+				this.settings,
+				this.app
+			);
+
 		const files = context.file.vault.getMarkdownFiles();
 		return sharedGetSuggestions(
 			files,

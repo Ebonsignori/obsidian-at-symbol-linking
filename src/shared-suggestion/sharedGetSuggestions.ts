@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { type TFile } from "obsidian";
+import { App, TFile } from "obsidian";
 import { type AtSymbolLinkingSettings } from "src/settings/settings";
 import { type fileOption } from "src/types";
 import { removeAccents } from "src/utils/remove-accents";
@@ -7,7 +7,8 @@ import { removeAccents } from "src/utils/remove-accents";
 export function sharedGetSuggestions(
 	files: TFile[],
 	query: string,
-	settings: AtSymbolLinkingSettings
+	settings: AtSymbolLinkingSettings,
+	app: App
 ): Fuzzysort.KeysResult<fileOption>[] {
 	const options: fileOption[] = [];
 	for (const file of files) {
@@ -102,5 +103,57 @@ export function sharedGetSuggestions(
 		}
 	}
 
+	return results;
+}
+
+export function sharedGetMonoFileSuggestion(
+	query: string,
+	settings: AtSymbolLinkingSettings,
+	app: App
+): Fuzzysort.KeysResult<fileOption>[] {
+	if (settings.limitToOneFile.length === 0) return [];
+	const file = app.vault.getAbstractFileByPath(settings.limitToOneFile);
+	if (!file || !(file instanceof TFile)) return [];
+	const meta = app.metadataCache.getFileCache(file);
+	if (!meta || !meta.headings) return [];
+	const firstHeadings = meta.headings.filter(
+		(heading) => heading.level === 1
+	);
+	if (firstHeadings.length === 0) return [];
+	const options: fileOption[] = firstHeadings.map((heading) => ({
+		fileName: heading.heading,
+		filePath: file.path,
+	}));
+	let results = [];
+	if (!query) {
+		results = options.map((option) => ({
+			obj: option,
+		}));
+	} else {
+		results = fuzzysort.go(query, options, {
+			keys: ["fileName"],
+		}) as any;
+	}
+	if (settings.happendAsHeader && query) {
+		const hasExistingHeader = results.some(
+			(result: Fuzzysort.KeysResult<fileOption>) =>
+				result?.obj?.fileName.toLocaleLowerCase() ===
+				query?.toLocaleLowerCase()
+		);
+		if (!hasExistingHeader) {
+			results = results.filter(
+				(result: Fuzzysort.KeysResult<fileOption>) =>
+					!result.obj?.isCreateNewOption
+			);
+			results.push({
+				obj: {
+					isCreateNewOption: true,
+					query,
+					fileName: `(Create new header) ${query} `,
+					filePath: file.path,
+				},
+			});
+		}
+	}
 	return results;
 }

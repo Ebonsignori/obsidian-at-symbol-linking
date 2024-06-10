@@ -8,11 +8,14 @@ import {
 import AtSymbolLinking from "src/main";
 import { FolderSuggest } from "./folder-suggest";
 import { FileSuggest } from "./file-suggest";
+import { FileSuggestWithPath } from "./file-suggest-path";
 
 export interface AtSymbolLinkingSettings {
 	triggerSymbol: string;
 	includeSymbol: boolean;
 	limitLinkDirectories: Array<string>;
+	limitToOneFile: string;
+	happendAsHeader: boolean;
 
 	showAddNewNote: boolean;
 	addNewNoteTemplateFile: string;
@@ -31,6 +34,8 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	triggerSymbol: "@",
 	limitLinkDirectories: [],
 	includeSymbol: true,
+	limitToOneFile: "",
+	happendAsHeader: false,
 
 	showAddNewNote: false,
 	addNewNoteTemplateFile: "",
@@ -120,182 +125,220 @@ export class SettingsTab extends PluginSettingTab {
 			);
 		// End includeSymbol option
 
-		// Begin limitLinksToFolders option: limit which folders links are sourced from
-		const ruleDesc = document.createDocumentFragment();
-		ruleDesc.append(
-			`${this.plugin.settings.triggerSymbol} linking will only source links from the following folders.`,
-			ruleDesc.createEl("br"),
-			`For example, you might only want contacts in the Contacts/ folder to be linked when you type ${this.plugin.settings.triggerSymbol}.`,
-			ruleDesc.createEl("br"),
-			ruleDesc.createEl("em", {
-				text: "If no folders are added, links will be sourced from all folders.",
-			})
-		);
-
 		new Setting(this.containerEl)
-			.setName("Limit links to folders")
-			.setDesc(ruleDesc)
-			.addButton((button: ButtonComponent) => {
-				button
-					.setTooltip("Add limit folder")
-					.setButtonText("+")
-					.setCta()
-					.onClick(async () => {
-						this.plugin.settings.limitLinkDirectories.push("");
+			.setName("Use one file for all links")
+			.setDesc(
+				"Limit to one files for contact linking, using the header (1st level) as the contact name."
+			)
+			.addSearch((cb) => {
+				new FileSuggestWithPath(this.app, cb.inputEl);
+				cb.setPlaceholder("No file")
+					.setValue(this.plugin.settings.limitToOneFile)
+					.onChange(async (newFile) => {
+						this.plugin.settings.limitToOneFile = newFile.trim();
 						await this.plugin.saveSettings();
-						return this.display();
 					});
+				cb.inputEl.onblur = () => {
+					this.validate();
+					this.display();
+				};
 			});
+		if (this.plugin.settings.limitToOneFile.trim().length > 0) {
+			new Setting(this.containerEl)
+				.setName("Append as header")
+				.setDesc(
+					"Append the contact as a header in the file if not found."
+				)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.happendAsHeader)
+						.onChange((value: boolean) => {
+							this.plugin.settings.happendAsHeader = value;
+							this.plugin.saveSettings();
+						})
+				);
+		} else {
+			// Begin limitLinksToFolders option: limit which folders links are sourced from
+			const ruleDesc = document.createDocumentFragment();
+			ruleDesc.append(
+				`${this.plugin.settings.triggerSymbol} linking will only source links from the following folders.`,
+				ruleDesc.createEl("br"),
+				`For example, you might only want contacts in the Contacts/ folder to be linked when you type ${this.plugin.settings.triggerSymbol}.`,
+				ruleDesc.createEl("br"),
+				ruleDesc.createEl("em", {
+					text: "If no folders are added, links will be sourced from all folders.",
+				})
+			);
 
-		this.plugin.settings.limitLinkDirectories.forEach(
-			(directory, index) => {
-				const newDirectorySetting = new Setting(this.containerEl)
-					.setClass("at-symbol-linking-folder-container")
+			new Setting(this.containerEl)
+				.setName("Limit links to folders")
+				.setDesc(ruleDesc)
+				.addButton((button: ButtonComponent) => {
+					button
+						.setTooltip("Add limit folder")
+						.setButtonText("+")
+						.setCta()
+						.onClick(async () => {
+							this.plugin.settings.limitLinkDirectories.push("");
+							await this.plugin.saveSettings();
+							return this.display();
+						});
+				});
+
+			this.plugin.settings.limitLinkDirectories.forEach(
+				(directory, index) => {
+					const newDirectorySetting = new Setting(this.containerEl)
+						.setClass("at-symbol-linking-folder-container")
+						.addSearch((cb) => {
+							new FolderSuggest(this.app, cb.inputEl);
+							cb.setPlaceholder("Folder")
+								.setValue(directory)
+								.onChange(async (newFolder) => {
+									this.plugin.settings.limitLinkDirectories[
+										index
+									] = newFolder.trim();
+									await this.plugin.saveSettings();
+								});
+							cb.inputEl.onblur = () => {
+								this.validate();
+							};
+						})
+						.addExtraButton((cb) => {
+							cb.setIcon("up-chevron-glyph")
+								.setTooltip("Move up")
+								.onClick(async () => {
+									arrayMove(
+										this.plugin.settings
+											.limitLinkDirectories,
+										index,
+										index - 1
+									);
+									await this.plugin.saveSettings();
+									this.display();
+								});
+						})
+						.addExtraButton((cb) => {
+							cb.setIcon("down-chevron-glyph")
+								.setTooltip("Move down")
+								.onClick(async () => {
+									arrayMove(
+										this.plugin.settings
+											.limitLinkDirectories,
+										index,
+										index + 1
+									);
+									await this.plugin.saveSettings();
+									this.display();
+								});
+						})
+						.addExtraButton((cb) => {
+							cb.setIcon("cross")
+								.setTooltip("Delete")
+								.onClick(async () => {
+									this.plugin.settings.limitLinkDirectories.splice(
+										index,
+										1
+									);
+									await this.plugin.saveSettings();
+									this.display();
+								});
+						});
+					newDirectorySetting.controlEl.addClass(
+						"at-symbol-linking-folder-setting"
+					);
+					newDirectorySetting.infoEl.remove();
+				}
+			);
+			// End limitLinksToFolders option
+
+			new Setting(this.containerEl).setName("Add new note").setHeading();
+
+			// Begin add new note option
+			new Setting(this.containerEl)
+				.setName("Add new note if it doesn't exist")
+				.setDesc(
+					`If the note doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the note.`
+				)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.showAddNewNote)
+						.onChange((value: boolean) => {
+							this.plugin.settings.showAddNewNote = value;
+							this.plugin.saveSettings();
+							this.display();
+						})
+				);
+			// End add new note option
+
+			if (this.plugin.settings.showAddNewNote) {
+				// Begin add new note template folder
+				const newNoteTemplateDesc = document.createDocumentFragment();
+				newNoteTemplateDesc.append(
+					`Template to use when creating a new note from ${this.plugin.settings.triggerSymbol} link.`,
+					newNoteTemplateDesc.createEl("br"),
+					"Uses formats from the ",
+					newNoteTemplateDesc.createEl("a", {
+						text: "core templates plugin",
+						href: "https://help.obsidian.md/Plugins/Templates",
+					}),
+					" to replace the following variables in the template:",
+					newNoteTemplateDesc.createEl("br"),
+					newNoteTemplateDesc.createEl("code", {
+						text: "{{title}}",
+					}),
+					" - The title of the new file",
+					newNoteTemplateDesc.createEl("br"),
+					newNoteTemplateDesc.createEl("code", {
+						text: "{{date}}",
+					}),
+					" - The current date",
+					newNoteTemplateDesc.createEl("br"),
+					newNoteTemplateDesc.createEl("code", {
+						text: "{{time}}",
+					}),
+					" - The current time"
+				);
+				new Setting(this.containerEl)
+					.setName("Add new note template")
+					.setDesc(newNoteTemplateDesc)
 					.addSearch((cb) => {
-						new FolderSuggest(this.app, cb.inputEl);
-						cb.setPlaceholder("Folder")
-							.setValue(directory)
-							.onChange(async (newFolder) => {
-								this.plugin.settings.limitLinkDirectories[
-									index
-								] = newFolder.trim();
+						new FileSuggest(this.app, cb.inputEl);
+						cb.setPlaceholder("No template (blank note)")
+							.setValue(
+								this.plugin.settings.addNewNoteTemplateFile
+							)
+							.onChange(async (newFile) => {
+								this.plugin.settings.addNewNoteTemplateFile =
+									newFile.trim();
 								await this.plugin.saveSettings();
 							});
 						cb.inputEl.onblur = () => {
 							this.validate();
 						};
-					})
-					.addExtraButton((cb) => {
-						cb.setIcon("up-chevron-glyph")
-							.setTooltip("Move up")
-							.onClick(async () => {
-								arrayMove(
-									this.plugin.settings.limitLinkDirectories,
-									index,
-									index - 1
-								);
-								await this.plugin.saveSettings();
-								this.display();
-							});
-					})
-					.addExtraButton((cb) => {
-						cb.setIcon("down-chevron-glyph")
-							.setTooltip("Move down")
-							.onClick(async () => {
-								arrayMove(
-									this.plugin.settings.limitLinkDirectories,
-									index,
-									index + 1
-								);
-								await this.plugin.saveSettings();
-								this.display();
-							});
-					})
-					.addExtraButton((cb) => {
-						cb.setIcon("cross")
-							.setTooltip("Delete")
-							.onClick(async () => {
-								this.plugin.settings.limitLinkDirectories.splice(
-									index,
-									1
-								);
-								await this.plugin.saveSettings();
-								this.display();
-							});
 					});
-				newDirectorySetting.controlEl.addClass(
-					"at-symbol-linking-folder-setting"
-				);
-				newDirectorySetting.infoEl.remove();
+				// End add new note template folder
+
+				// Begin add new note directory
+				new Setting(this.containerEl)
+					.setName("Add new note folder")
+					.setDesc(
+						`Folder to create new notes in when using ${this.plugin.settings.triggerSymbol} linking.`
+					)
+					.addSearch((cb) => {
+						new FolderSuggest(this.app, cb.inputEl);
+						cb.setPlaceholder("No folder (root)")
+							.setValue(this.plugin.settings.addNewNoteDirectory)
+							.onChange(async (newFolder) => {
+								this.plugin.settings.addNewNoteDirectory =
+									newFolder.trim();
+								await this.plugin.saveSettings();
+							});
+						cb.inputEl.onblur = () => {
+							this.validate();
+						};
+					});
+				// End add new note directory
 			}
-		);
-		// End limitLinksToFolders option
-
-		new Setting(this.containerEl).setName("Add new note").setHeading();
-
-		// Begin add new note option
-		new Setting(this.containerEl)
-			.setName("Add new note if it doesn't exist")
-			.setDesc(
-				`If the note doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the note.`
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.showAddNewNote)
-					.onChange((value: boolean) => {
-						this.plugin.settings.showAddNewNote = value;
-						this.plugin.saveSettings();
-						this.display();
-					})
-			);
-		// End add new note option
-
-		if (this.plugin.settings.showAddNewNote) {
-			// Begin add new note template folder
-			const newNoteTemplateDesc = document.createDocumentFragment();
-			newNoteTemplateDesc.append(
-				`Template to use when creating a new note from ${this.plugin.settings.triggerSymbol} link.`,
-				newNoteTemplateDesc.createEl("br"),
-				"Uses formats from the ",
-				newNoteTemplateDesc.createEl("a", {
-					text: "core templates plugin",
-					href: "https://help.obsidian.md/Plugins/Templates",
-				}),
-				" to replace the following variables in the template:",
-				newNoteTemplateDesc.createEl("br"),
-				newNoteTemplateDesc.createEl("code", {
-					text: "{{title}}",
-				}),
-				" - The title of the new file",
-				newNoteTemplateDesc.createEl("br"),
-				newNoteTemplateDesc.createEl("code", {
-					text: "{{date}}",
-				}),
-				" - The current date",
-				newNoteTemplateDesc.createEl("br"),
-				newNoteTemplateDesc.createEl("code", {
-					text: "{{time}}",
-				}),
-				" - The current time"
-			);
-			new Setting(this.containerEl)
-				.setName("Add new note template")
-				.setDesc(newNoteTemplateDesc)
-				.addSearch((cb) => {
-					new FileSuggest(this.app, cb.inputEl);
-					cb.setPlaceholder("No template (blank note)")
-						.setValue(this.plugin.settings.addNewNoteTemplateFile)
-						.onChange(async (newFile) => {
-							this.plugin.settings.addNewNoteTemplateFile =
-								newFile.trim();
-							await this.plugin.saveSettings();
-						});
-					cb.inputEl.onblur = () => {
-						this.validate();
-					};
-				});
-			// End add new note template folder
-
-			// Begin add new note directory
-			new Setting(this.containerEl)
-				.setName("Add new note folder")
-				.setDesc(
-					`Folder to create new notes in when using ${this.plugin.settings.triggerSymbol} linking.`
-				)
-				.addSearch((cb) => {
-					new FolderSuggest(this.app, cb.inputEl);
-					cb.setPlaceholder("No folder (root)")
-						.setValue(this.plugin.settings.addNewNoteDirectory)
-						.onChange(async (newFolder) => {
-							this.plugin.settings.addNewNoteDirectory =
-								newFolder.trim();
-							await this.plugin.saveSettings();
-						});
-					cb.inputEl.onblur = () => {
-						this.validate();
-					};
-				});
-			// End add new note directory
 		}
 
 		new Setting(this.containerEl)

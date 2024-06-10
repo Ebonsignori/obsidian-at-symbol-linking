@@ -12,33 +12,47 @@ export async function sharedSelectSuggestion(
 	// When user selects "Create new note" option, create the note to link to
 	let linkFile;
 	if (value?.obj?.isCreateNewOption) {
-		let newNoteContents = "";
-		if (settings.addNewNoteTemplateFile) {
-			const fileTemplate = app.vault.getAbstractFileByPath(
-				`${settings.addNewNoteTemplateFile}.md`
+		if (settings.limitToOneFile.length > 0) {
+			const file = app.vault.getAbstractFileByPath(
+				settings.limitToOneFile
 			) as TFile;
-			newNoteContents = (await app.vault.read(fileTemplate)) || "";
-			// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
-			newNoteContents = await replaceNewFileVars(
-				app,
-				newNoteContents,
-				fileNameNoExtension(value.obj?.filePath)
-			);
-		}
+			if (!file) {
+				new Notice(
+					`Unable to get the file at path: ${settings.limitToOneFile}. Please open an issue on GitHub, as this should not happen.`,
+					0
+				);
+			}
+			//edit the file and add a new header
+			app.vault.append(file, `# ${value.obj?.query}\n`);
+		} else {
+			let newNoteContents = "";
+			if (settings.addNewNoteTemplateFile) {
+				const fileTemplate = app.vault.getAbstractFileByPath(
+					`${settings.addNewNoteTemplateFile}.md`
+				) as TFile;
+				newNoteContents = (await app.vault.read(fileTemplate)) || "";
+				// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
+				newNoteContents = await replaceNewFileVars(
+					app,
+					newNoteContents,
+					fileNameNoExtension(value.obj?.filePath)
+				);
+			}
 
-		try {
-			linkFile = await app.vault.create(
-				value.obj?.filePath,
-				newNoteContents
-			);
-			// Update the alias to the name for displaying the @ link
-			value.obj.alias = value.obj?.query;
-		} catch (error) {
-			new Notice(
-				`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
-				0
-			);
-			throw error;
+			try {
+				linkFile = await app.vault.create(
+					value.obj?.filePath,
+					newNoteContents
+				);
+				// Update the alias to the name for displaying the @ link
+				value.obj.alias = value.obj?.query;
+			} catch (error) {
+				new Notice(
+					`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
+					0
+				);
+				throw error;
+			}
 		}
 	}
 
@@ -49,17 +63,29 @@ export async function sharedSelectSuggestion(
 		) as TFile;
 	}
 	let alias = value.obj?.alias || "";
-	if (settings.includeSymbol) alias = `${settings.triggerSymbol}${alias || value.obj?.fileName}`;
-	let linkText = app.fileManager.generateMarkdownLink(
-		linkFile,
-		currentFile?.path || "",
-		undefined, // we don't care about the subpath
-		alias
-	);
+	const aliasFallBack =
+		settings.limitToOneFile.length > 0
+			? value.obj?.query ?? value.obj?.fileName
+			: value.obj?.fileName;
+	if (settings.includeSymbol)
+		alias = `${settings.triggerSymbol}${alias || aliasFallBack}`;
+	const linkText =
+		settings.limitToOneFile.length > 0
+			? app.fileManager.generateMarkdownLink(
+				linkFile,
+				currentFile?.path || "",
+				`#${value.obj?.query || value.obj?.fileName}`,
+				alias
+			  )
+			: app.fileManager.generateMarkdownLink(
+				linkFile,
+				currentFile?.path || "",
+				undefined, // we don't care about the subpath
+				alias
+			  );
 
 	if (linkText.includes("\n")) {
-		linkText = linkText.replace(/\n/g, "");
+		return linkText.replace(/\n/g, "");
 	}
-
 	return linkText;
 }
