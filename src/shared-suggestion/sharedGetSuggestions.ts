@@ -153,7 +153,7 @@ export function sharedGetMonoFileSuggestion(
 				obj: {
 					isCreateNewOption: true,
 					query,
-					fileName: `(Create new header) ${query} `,
+					fileName: query,
 					filePath: file.path,
 				},
 			});

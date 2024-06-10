@@ -4,7 +4,8 @@ import { highlightSearch } from "src/utils/highlight-search";
 
 export default function sharedRenderSuggestion(
 	value: Fuzzysort.KeysResult<fileOption>,
-	el: HTMLElement
+	el: HTMLElement,
+	limitToOneFile: boolean = false,
 ): void {
 	el.addClass("at-symbol-linking-suggestion");
 	const context = el.doc.createElement("div");
@@ -26,12 +27,19 @@ export default function sharedRenderSuggestion(
 		title.setText("");
 	}
 
-	const path = el.doc.createElement("div");
-	path.addClass("suggestion-path");
-	path.setText(value.obj?.filePath?.slice(0, -3));
-
 	context.appendChild(title);
-	context.appendChild(path);
+	if (!limitToOneFile){		
+		const path = el.doc.createElement("div");
+		path.addClass("suggestion-path");
+		path.setText(value.obj?.filePath?.slice(0, -3));
+		context.appendChild(path);
+	} else if (value.obj.isCreateNewOption) {
+		const path = el.doc.createElement("div");
+		path.addClass("suggestion-path");
+		path.setText("Create a new contact header");
+		context.appendChild(path);
+	}
+	
 
 	const aux = el.doc.createElement("div");
 	aux.addClass("suggestion-aux");
