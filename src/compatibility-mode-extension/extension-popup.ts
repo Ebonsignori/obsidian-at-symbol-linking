@@ -220,7 +220,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 
 	getSuggestions(query: string): Fuzzysort.KeysResult<fileOption>[] {
 		const files = this.app.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, query, this.settings);
+		return sharedGetSuggestions(files, query, this.settings, this.app);
 	}
 
 	renderSuggestion(

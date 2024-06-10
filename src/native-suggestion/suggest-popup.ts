@@ -15,6 +15,7 @@ import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 import { removeAccents } from "src/utils/remove-accents";
 
+//@ts-ignore
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
 > {
@@ -49,7 +50,12 @@ export default class SuggestionPopup extends EditorSuggest<
 		context: EditorSuggestContext
 	): Fuzzysort.KeysResult<fileOption>[] {
 		const files = context.file.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, context.query, this.settings);
+		return sharedGetSuggestions(
+			files,
+			context.query,
+			this.settings,
+			this.app
+		);
 	}
 
 	onTrigger(
@@ -96,7 +102,6 @@ export default class SuggestionPopup extends EditorSuggest<
 		if (isInCodeBlock && !this.firstOpenedCursor) {
 			return null;
 		}
-
 
 		// Open suggestion when trigger is typed
 		if (typedChar === this.settings.triggerSymbol) {
