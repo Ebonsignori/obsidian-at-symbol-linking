@@ -7,9 +7,14 @@ Adds the ability to link using the `@` (the At Symbol) in [Obsidian](https://obs
 Supports [aliases](https://help.obsidian.md/Linking+notes+and+files/Aliases) (nicknames for a file) that you can set in the properties/metadata of a note via the `alias` or `aliases` field.
 
 ## Settings
+You can limit `@` links to:
+	- From specific directories, like your `People/` directory.
+	- **Or** from a single file, like your `People.md` file. You can configure the level heading using the slider.
 
-- Limit `@` links to only source links from specific directories, like your `People/` directory.
-- Can create a new note from a template in a specified directory if no `@` link is found.
+Depending of the previous settings, the creation of a not found `@` link will:
+	- Create a new note from a template in a specified directory (for directories linking)
+	- **Only if a path is set in the `Use one file for all links`**, append the contact name in the file, as heading.
+
 - Turn on compatibility mode to enable `@` linking when plugins that show suggestions like the [Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks) are enabled.
 - Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
 
