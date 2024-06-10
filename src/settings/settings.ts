@@ -129,10 +129,11 @@ export class SettingsTab extends PluginSettingTab {
 		// Start limitToOneFile option
 		const messageAboutLevel = this.plugin.settings.headerLevelForContact === 0 ? "include all headers" : `current heading level: ${this.plugin.settings.headerLevelForContact}`;
 		new Setting(this.containerEl)
-			.setName("Use one file for all links")
+			.setName("Limit links to files")
+			.setHeading()
 			.setDesc(
 				`Limit to one files for contact linking, using the header (${messageAboutLevel}) as the contact name.
-				Leave blank to disable.`
+				Leave empty to use the directories structure instead.`
 			)
 			.addButton((button: ButtonComponent) => {
 				button
@@ -147,7 +148,7 @@ export class SettingsTab extends PluginSettingTab {
 			});
 		this.plugin.settings.limitToOneFile.forEach((file, index) => {
 			const newFileSetting = new Setting(this.containerEl)
-				.setClass("at-symbol-linking-file-container")
+				.setClass("at-symbol-linking-folder-container")
 				.addSearch((cb) => {
 					new FileSuggestWithPath(this.app, cb.inputEl);
 					cb.setPlaceholder("File")
@@ -256,6 +257,7 @@ export class SettingsTab extends PluginSettingTab {
 
 			new Setting(this.containerEl)
 				.setName("Limit links to folders")
+				.setHeading()
 				.setDesc(ruleDesc)
 				.addButton((button: ButtonComponent) => {
 					button
