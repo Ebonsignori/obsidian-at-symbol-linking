@@ -14,7 +14,7 @@ export interface AtSymbolLinkingSettings {
 	triggerSymbol: string;
 	includeSymbol: boolean;
 	limitLinkDirectories: Array<string>;
-	limitToOneFile: string;
+	limitToOneFile: Array<string>;
 	appendAsHeader: boolean;
 	headerLevelForContact: number;
 
@@ -35,7 +35,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	triggerSymbol: "@",
 	limitLinkDirectories: [],
 	includeSymbol: true,
-	limitToOneFile: "",
+	limitToOneFile: [],
 	appendAsHeader: false,
 	headerLevelForContact: 1,
 
@@ -134,44 +134,96 @@ export class SettingsTab extends PluginSettingTab {
 				`Limit to one files for contact linking, using the header (${messageAboutLevel}) as the contact name.
 				Leave blank to disable.`
 			)
-			.addSearch((cb) => {
-				new FileSuggestWithPath(this.app, cb.inputEl);
-				cb.setPlaceholder("No file")
-					.setValue(this.plugin.settings.limitToOneFile)
-					.onChange(async (newFile) => {
-						this.plugin.settings.limitToOneFile = newFile.trim();
+			.addButton((button: ButtonComponent) => {
+				button
+					.setTooltip("Add a file")
+					.setButtonText("+")
+					.setCta()
+					.onClick(async () => {
+						this.plugin.settings.limitToOneFile.push("");
 						await this.plugin.saveSettings();
+						return this.display();
 					});
-					
-				cb.inputEl.onblur = () => {
-					this.validate();
-					this.display();
-				};
-				cb.clearButtonEl.onclick = () => {
-					this.display();
-				};
-			})
-		
-			.addSlider((slider) => {
-				slider
-					.setLimits(0, 6, 1)
-					.setValue(this.plugin.settings.headerLevelForContact)
-					.onChange(async (value: number) => {
-						this.plugin.settings.headerLevelForContact = value;
-						await this.plugin.saveSettings();
-					});
-				slider.sliderEl.onmouseleave = () => {
-					this.display();
-				};
-				slider.sliderEl.ariaLabel = `Header level for contact name\nCurrent: ${this.plugin.settings.headerLevelForContact}`;
-				
 			});
-		// End limitToOneFile option
-
-		// Begin appendAsHeader option
-		const snRdTh = this.plugin.settings.headerLevelForContact === 2 ? "nd" : this.plugin.settings.headerLevelForContact === 3 ? "rd" : this.plugin.settings.headerLevelForContact === 1 ? "st" : "th";
-		const atTheLevel = this.plugin.settings.headerLevelForContact === 0 ? "at the 1st level" : `at the ${this.plugin.settings.headerLevelForContact}${snRdTh} level`;
-		if (this.plugin.settings.limitToOneFile.trim().length > 0) {
+		this.plugin.settings.limitToOneFile.forEach((file, index) => {
+			const newFileSetting = new Setting(this.containerEl)
+				.setClass("at-symbol-linking-file-container")
+				.addSearch((cb) => {
+					new FileSuggestWithPath(this.app, cb.inputEl);
+					cb.setPlaceholder("File")
+						.setValue(file)
+						.onChange(async (newFile) => {
+							this.plugin.settings.limitToOneFile[index] =
+								newFile.trim();
+							await this.plugin.saveSettings();
+						});
+					cb.inputEl.onblur = () => {
+						this.validate();
+					};
+				})
+				.addExtraButton((cb) => {
+					cb.setIcon("up-chevron-glyph")
+						.setTooltip("Move up")
+						.onClick(async () => {
+							arrayMove(
+								this.plugin.settings.limitToOneFile,
+								index,
+								index - 1
+							);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				})
+				.addExtraButton((cb) => {
+					cb.setIcon("down-chevron-glyph")
+						.setTooltip("Move down")
+						.onClick(async () => {
+							arrayMove(
+								this.plugin.settings.limitToOneFile,
+								index,
+								index + 1
+							);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				})
+				.addExtraButton((cb) => {
+					cb.setIcon("cross")
+						.setTooltip("Delete")
+						.onClick(async () => {
+							this.plugin.settings.limitToOneFile.splice(index, 1);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				});
+			newFileSetting.controlEl.addClass("at-symbol-linking-folder-setting");
+			newFileSetting.infoEl.remove();
+		});
+		
+		
+		if (this.plugin.settings.limitToOneFile.length > 0) {
+			const snRdTh = this.plugin.settings.headerLevelForContact === 2 ? "nd" : this.plugin.settings.headerLevelForContact === 3 ? "rd" : this.plugin.settings.headerLevelForContact === 1 ? "st" : "th";
+			const atTheLevel = this.plugin.settings.headerLevelForContact === 0 ? "at the 1st level" : `at the ${this.plugin.settings.headerLevelForContact}${snRdTh} level`;
+			//Begin headerLevelForContact option
+			new Setting(this.containerEl)
+				.setName("Header level for contact name")
+				.addSlider((slider) => {
+					slider
+						.setLimits(0, 6, 1)
+						.setValue(this.plugin.settings.headerLevelForContact)
+						.onChange(async (value: number) => {
+							this.plugin.settings.headerLevelForContact = value;
+							await this.plugin.saveSettings();
+						});
+					slider.sliderEl.onmouseleave = () => {
+						this.display();
+					};
+					slider.sliderEl.ariaLabel = `Header level for contact name\nCurrent: ${this.plugin.settings.headerLevelForContact}`;
+				
+				});
+			//End headerLevelForContact option
+			
+			// Begin appendAsHeader option
 			new Setting(this.containerEl)
 				.setName("Add new header")
 				.setHeading();

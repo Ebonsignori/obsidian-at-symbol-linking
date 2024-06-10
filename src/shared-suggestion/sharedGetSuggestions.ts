@@ -95,8 +95,8 @@ export function sharedGetSuggestions(
 			results.push({
 				obj: {
 					isCreateNewOption: true,
-					query: query,
-					fileName: "Create new note",
+					query,
+					fileName: query,
 					filePath: `${settings.addNewNoteDirectory.trim()}${separator}${query.trim()}.md`,
 				},
 			});
@@ -112,22 +112,28 @@ export function sharedGetMonoFileSuggestion(
 	app: App
 ): Fuzzysort.KeysResult<fileOption>[] {
 	if (settings.limitToOneFile.length === 0) return [];
-	const file = app.vault.getAbstractFileByPath(settings.limitToOneFile);
-	if (!file || !(file instanceof TFile)) return [];
-	const meta = app.metadataCache.getFileCache(file);
-	if (!meta || !meta.headings) return [];
-	
-	let contactHeading = meta.headings;
-	if (settings.headerLevelForContact !== 0) {
-		contactHeading = contactHeading.filter(
+	const files: TFile[] = settings.limitToOneFile.map((path) => {
+		const file = app.vault.getAbstractFileByPath(path);
+		if (file && file instanceof TFile) return file;
+		return null;
+	}).filter((file) => file !== null) as TFile[];
+	if (files.length === 0) return [];
+	const options: fileOption[] = [];
+	for (const file of files) {
+		const meta = app.metadataCache.getFileCache(file);
+		if (!meta || !meta.headings) return [];
+		
+		const heading = settings.headerLevelForContact === 0 ? meta.headings : meta.headings.filter(
 			(heading) => heading.level === settings.headerLevelForContact
 		);
+		const option: fileOption[] = heading.map((heading) => ({
+			fileName: heading.heading,
+			filePath: file.path,
+		}));
+		options.push(...option);
 	}
-	if (contactHeading.length === 0) return [];
-	const options: fileOption[] = contactHeading.map((heading) => ({
-		fileName: heading.heading,
-		filePath: file.path,
-	}));
+	if (options.length === 0) return [];
+	
 	let results = [];
 	if (!query) {
 		results = options.map((option) => ({
@@ -149,14 +155,16 @@ export function sharedGetMonoFileSuggestion(
 				(result: Fuzzysort.KeysResult<fileOption>) =>
 					!result.obj?.isCreateNewOption
 			);
-			results.push({
-				obj: {
-					isCreateNewOption: true,
-					query,
-					fileName: query,
-					filePath: file.path,
-				},
-			});
+			for (const file of files) {
+				results.push({
+					obj: {
+						isCreateNewOption: true,
+						query,
+						fileName: query,
+						filePath: file.path,
+					},
+				});
+			}
 		}
 	}
 	return results;

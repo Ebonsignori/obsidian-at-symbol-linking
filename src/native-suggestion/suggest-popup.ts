@@ -159,7 +159,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		value: Fuzzysort.KeysResult<fileOption>,
 		el: HTMLElement
 	): void {
-		sharedRenderSuggestion(value, el, this.settings.limitToOneFile.length > 0);
+		sharedRenderSuggestion(value, el, this.settings.limitToOneFile.length);
 	}
 
 	async selectSuggestion(

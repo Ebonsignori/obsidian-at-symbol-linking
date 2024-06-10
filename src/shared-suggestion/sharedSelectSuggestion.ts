@@ -14,7 +14,7 @@ export async function sharedSelectSuggestion(
 	if (value?.obj?.isCreateNewOption) {
 		if (settings.limitToOneFile.length > 0) {
 			const file = app.vault.getAbstractFileByPath(
-				settings.limitToOneFile
+				value.obj?.filePath
 			) as TFile;
 			if (!file) {
 				new Notice(
