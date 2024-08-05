@@ -118,7 +118,7 @@ export class SettingsTab extends PluginSettingTab {
 		);
 
 		new Setting(this.containerEl)
-			.setName(`Include ${this.plugin.settings.triggerSymbol} symbol`)
+			.setName(`Include ${this.plugin.settings.triggerSymbol} symbol in link text`)
 			.setDesc(includeSymbolDesc)
 			.addToggle((toggle) =>
 				toggle
@@ -134,13 +134,13 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin includeSymbolInAlias option: Determine whether to include @ symbol in link alias
 		const includeSymbolInAliasDesc = document.createDocumentFragment();
 		includeSymbolInAliasDesc.append(
-			`Include the ${this.plugin.settings.triggerSymbol} symbol prefixing the final alias text`,
+			`Include the ${this.plugin.settings.triggerSymbol} symbol prefixing the final link alias text`,
 			includeSymbolInAliasDesc.createEl("br"),
 			includeSymbolInAliasDesc.createEl("em", {text: exampleText,})
 		);
 
 		new Setting(this.containerEl)
-			.setName(`Include ${this.plugin.settings.triggerSymbol} in alias`)
+			.setName(`Include ${this.plugin.settings.triggerSymbol} symbol in link alias`)
 			.setDesc(includeSymbolInAliasDesc)
 			.addToggle((toggle) =>
 				toggle
