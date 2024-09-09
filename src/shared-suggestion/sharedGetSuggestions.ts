@@ -12,7 +12,9 @@ export function sharedGetSuggestions(
 	typedChar: string
 ): Fuzzysort.KeysResult<fileOption>[] {
 	const options: fileOption[] = [];
-	let newFolderOfcreation = normalizePath(settings.addNewNoteDirectory.trim() + "/");
+	const newFolderOfcreation = normalizePath(settings.addNewNoteDirectory.trim() + "/");
+	const allNewFolder:Set<string> = new Set();
+	if (settings.addNewNoteDirectory.trim().length >0) allNewFolder.add(newFolderOfcreation);
 	for (const file of files) {
 		// If there are folders to limit links to, check if the file is in one of them
 		if (settings.limitLinkDirectoriesWithTrigger.length > 0) {
@@ -21,7 +23,7 @@ export function sharedGetSuggestions(
 				if (typedChar !== folder.triggerSymbol) continue;
 				if (file.parent?.path.startsWith(folder.path)) {
 					isAllowed = true;
-					newFolderOfcreation = folder.path;
+					allNewFolder.add(folder.path);
 					break;
 				}
 			}
@@ -96,14 +98,16 @@ export function sharedGetSuggestions(
 				(result: Fuzzysort.KeysResult<fileOption>) =>
 					!result.obj?.isCreateNewOption
 			);
-			results.push({
-				obj: {
-					isCreateNewOption: true,
-					query,
-					fileName: query,
-					filePath: normalizePath(`${newFolderOfcreation}/${query.trim()}.md`),
-				},
-			});
+			for (const folder of allNewFolder) {
+				results.push({
+					obj: {
+						isCreateNewOption: true,
+						query,
+						fileName: query,
+						filePath: normalizePath(`${folder}/${query.trim()}.md`),
+					},
+				});
+			}
 		}
 	}
 

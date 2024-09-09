@@ -151,7 +151,7 @@ export class SettingsTab extends PluginSettingTab {
 						.setButtonText("+")
 						.setCta()
 						.onClick(async () => {
-							this.plugin.settings.limitToOneFileWithTrigger.push({path: ""});
+							this.plugin.settings.limitToOneFileWithTrigger.push({path: "", triggerSymbol: this.plugin.settings.triggerSymbol});
 							this.plugin.settings._enableOneFile = true;
 							await this.plugin.saveSettings();
 							return this.display();
@@ -290,7 +290,7 @@ export class SettingsTab extends PluginSettingTab {
 						.setButtonText("+")
 						.setCta()
 						.onClick(async () => {
-							this.plugin.settings.limitLinkDirectoriesWithTrigger.push({path:""});
+							this.plugin.settings.limitLinkDirectoriesWithTrigger.push({path:"", triggerSymbol: this.plugin.settings.triggerSymbol});
 							this.plugin.settings._enableOneFile = false;
 							await this.plugin.saveSettings();
 							return this.display();
@@ -446,7 +446,7 @@ export class SettingsTab extends PluginSettingTab {
 				new Setting(this.containerEl)
 					.setName("Add new note folder")
 					.setDesc(
-						`Folder to create new notes in when using ${this.plugin.settings.triggerSymbol} linking.`
+						`Folder to create new notes in when using ${this.plugin.settings.triggerSymbol} linking. If the limit directories is used, the folder will be the limited directory selected by the trigger.`
 					)
 					.addSearch((cb) => {
 						new FolderSuggest(this.app, cb.inputEl);
