@@ -51,3 +51,7 @@
 	width: fit-content !important;
 	max-width: 500px;
 }
+
+.at-symbol-linking input.min-width {
+	width: 10ch;
+}

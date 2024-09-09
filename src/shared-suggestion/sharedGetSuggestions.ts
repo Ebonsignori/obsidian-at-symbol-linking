@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { App, TFile } from "obsidian";
+import { App, TFile, normalizePath } from "obsidian";
 import { type AtSymbolLinkingSettings } from "src/settings/settings";
 import { type fileOption } from "src/types";
 import { removeAccents } from "src/utils/remove-accents";
@@ -8,16 +8,20 @@ export function sharedGetSuggestions(
 	files: TFile[],
 	query: string,
 	settings: AtSymbolLinkingSettings,
-	app: App
+	app: App,
+	typedChar: string
 ): Fuzzysort.KeysResult<fileOption>[] {
 	const options: fileOption[] = [];
+	let newFolderOfcreation = normalizePath(settings.addNewNoteDirectory.trim() + "/");
 	for (const file of files) {
 		// If there are folders to limit links to, check if the file is in one of them
-		if (settings.limitLinkDirectories.length > 0) {
+		if (settings.limitLinkDirectoriesWithTrigger.length > 0) {
 			let isAllowed = false;
-			for (const folder of settings.limitLinkDirectories) {
-				if (file.path.startsWith(folder)) {
+			for (const folder of settings.limitLinkDirectoriesWithTrigger) {
+				if (typedChar !== folder.triggerSymbol) continue;
+				if (file.parent?.path.startsWith(folder.path)) {
 					isAllowed = true;
+					newFolderOfcreation = folder.path;
 					break;
 				}
 			}
@@ -80,6 +84,7 @@ export function sharedGetSuggestions(
 
 	// If showAddNewNote option is enabled, show it as the last option
 	if (settings.showAddNewNote && query) {
+		console.log(newFolderOfcreation);
 		// Don't show if it has the same filename as an existing note
 		const hasExistingNote = results.some(
 			(result: Fuzzysort.KeysResult<fileOption>) =>
@@ -91,13 +96,12 @@ export function sharedGetSuggestions(
 				(result: Fuzzysort.KeysResult<fileOption>) =>
 					!result.obj?.isCreateNewOption
 			);
-			const separator = settings.addNewNoteDirectory ? "/" : "";
 			results.push({
 				obj: {
 					isCreateNewOption: true,
 					query,
 					fileName: query,
-					filePath: `${settings.addNewNoteDirectory.trim()}${separator}${query.trim()}.md`,
+					filePath: normalizePath(`${newFolderOfcreation}/${query.trim()}.md`),
 				},
 			});
 		}
@@ -109,11 +113,12 @@ export function sharedGetSuggestions(
 export function sharedGetMonoFileSuggestion(
 	query: string,
 	settings: AtSymbolLinkingSettings,
-	app: App
+	app: App,
+	typedChar: string
 ): Fuzzysort.KeysResult<fileOption>[] {
-	if (settings.limitToOneFile.length === 0) return [];
-	const files: TFile[] = settings.limitToOneFile.map((path) => {
-		const file = app.vault.getAbstractFileByPath(path);
+	if (settings.limitToOneFileWithTrigger.length === 0) return [];
+	const files: TFile[] = settings.limitToOneFileWithTrigger.filter((x)=>x.triggerSymbol== typedChar).map((path) => {
+		const file = app.vault.getAbstractFileByPath(path.path);
 		if (file && file instanceof TFile) return file;
 		return null;
 	}).filter((file) => file !== null) as TFile[];

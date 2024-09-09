@@ -7,18 +7,19 @@ import { type AtSymbolLinkingSettings } from "src/settings/settings";
 export async function sharedSelectSuggestion(
 	app: App,
 	settings: AtSymbolLinkingSettings,
+	typedChar: string,
 	value: Fuzzysort.KeysResult<fileOption>
 ): Promise<string> {
 	// When user selects "Create new note" option, create the note to link to
 	let linkFile;
 	if (value?.obj?.isCreateNewOption) {
-		if (settings.limitToOneFile.length > 0) {
+		if (settings.limitToOneFileWithTrigger.length > 0) {
 			const file = app.vault.getAbstractFileByPath(
 				value.obj?.filePath
 			) as TFile;
 			if (!file) {
 				new Notice(
-					`Unable to get the file at path: ${settings.limitToOneFile}. Please open an issue on GitHub, as this should not happen.`,
+					`Unable to get the file at path: ${value.obj.filePath}. Please open an issue on GitHub, as this should not happen.`,
 					0
 				);
 			}
@@ -71,13 +72,13 @@ export async function sharedSelectSuggestion(
 	}
 	let alias = value.obj?.alias || "";
 	const aliasFallBack =
-		settings.limitToOneFile.length > 0
+		settings.limitToOneFileWithTrigger.length > 0
 			? value.obj?.query ?? value.obj?.fileName
 			: value.obj?.fileName;
 	if (settings.includeSymbol)
-		alias = `${settings.triggerSymbol}${alias || aliasFallBack}`;
+		alias = `${typedChar}${alias || aliasFallBack}`;
 	const linkText =
-		settings.limitToOneFile.length > 0
+		settings.limitToOneFileWithTrigger.length > 0
 			? app.fileManager.generateMarkdownLink(
 				linkFile,
 				currentFile?.path || "",

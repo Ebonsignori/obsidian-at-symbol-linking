@@ -13,8 +13,11 @@ import { FileSuggestWithPath } from "./file-suggest-path";
 export interface AtSymbolLinkingSettings {
 	triggerSymbol: string;
 	includeSymbol: boolean;
-	limitLinkDirectories: Array<string>;
-	limitToOneFile: Array<string>;
+	limitLinkDirectories?: Array<string>;
+	limitToOneFile?: Array<string>;
+	limitLinkDirectoriesWithTrigger: CustomTriggerPerLimit[];
+	limitToOneFileWithTrigger: CustomTriggerPerLimit[];
+	_enableOneFile: boolean;
 	appendAsHeader: boolean;
 	headerLevelForContact: number;
 
@@ -31,13 +34,19 @@ export interface AtSymbolLinkingSettings {
 	removeAccents: boolean;
 }
 
+export interface CustomTriggerPerLimit {
+	triggerSymbol?: string;
+	path: string;
+}
+
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	triggerSymbol: "@",
-	limitLinkDirectories: [],
+	limitLinkDirectoriesWithTrigger: [],
 	includeSymbol: true,
-	limitToOneFile: [],
+	limitToOneFileWithTrigger: [],
 	appendAsHeader: false,
 	headerLevelForContact: 1,
+	_enableOneFile: false,
 
 	showAddNewNote: false,
 	addNewNoteTemplateFile: "",
@@ -80,19 +89,19 @@ export class SettingsTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-
+		this.containerEl.addClass("at-symbol-linking");
 		// Begin triggerSymbol option: Determine which symbol triggers the popup
 		const triggerSymbolDesc = document.createDocumentFragment();
 		triggerSymbolDesc.append("Type this symbol to trigger the popup.");
 		new Setting(this.containerEl)
-			.setName("Trigger Symbol")
+			.setName("Default trigger Symbol")
 			.setDesc(triggerSymbolDesc)
 			.addText((text) => {
 				text.setPlaceholder("@")
 					.setValue(this.plugin.settings.triggerSymbol)
-					.onChange((value: string) => {
+					.onChange(async (value: string) => {
 						this.plugin.settings.triggerSymbol = value;
-						this.plugin.saveSettings();
+						await this.plugin.saveSettings();
 					});
 				text.inputEl.onblur = () => {
 					this.display();
@@ -103,7 +112,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin includeSymbol option: Determine whether to include @ symbol in link
 		const includeSymbolDesc = document.createDocumentFragment();
 		includeSymbolDesc.append(
-			`Include the ${this.plugin.settings.triggerSymbol} symbol prefixing the final link text`,
+			`Include the trigger symbol (default: ${this.plugin.settings.triggerSymbol}) prefixing the final link text`,
 			includeSymbolDesc.createEl("br"),
 			includeSymbolDesc.createEl("em", {
 				text: `E.g. [${
@@ -114,47 +123,50 @@ export class SettingsTab extends PluginSettingTab {
 			})
 		);
 		new Setting(this.containerEl)
-			.setName(`Include ${this.plugin.settings.triggerSymbol} symbol`)
+			.setName(`Include the trigger symbol`)
 			.setDesc(includeSymbolDesc)
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.includeSymbol)
-					.onChange((value: boolean) => {
+					.onChange(async (value: boolean) => {
 						this.plugin.settings.includeSymbol = value;
-						this.plugin.saveSettings();
+						await this.plugin.saveSettings();
 						this.display();
 					})
 			);
 		// End includeSymbol option
 		// Start limitToOneFile option
 		const messageAboutLevel = this.plugin.settings.headerLevelForContact === 0 ? "include all headers" : `current heading level: ${this.plugin.settings.headerLevelForContact}`;
-		new Setting(this.containerEl)
-			.setName("Limit links to files")
-			.setHeading()
-			.setDesc(
-				`Limit to one files for contact linking, using the header (${messageAboutLevel}) as the contact name.
+		if (this.plugin.settings.limitLinkDirectoriesWithTrigger.length=== 0) {
+			new Setting(this.containerEl)
+				.setName("Limit links to files")
+				.setHeading()
+				.setDesc(
+					`Limit to one files for contact linking, using the header (${messageAboutLevel}) as the contact name.
 				Leave empty to use the directories structure instead.`
-			)
-			.addButton((button: ButtonComponent) => {
-				button
-					.setTooltip("Add a file")
-					.setButtonText("+")
-					.setCta()
-					.onClick(async () => {
-						this.plugin.settings.limitToOneFile.push("");
-						await this.plugin.saveSettings();
-						return this.display();
-					});
-			});
-		this.plugin.settings.limitToOneFile.forEach((file, index) => {
+				)
+				.addButton((button: ButtonComponent) => {
+					button
+						.setTooltip("Add a file")
+						.setButtonText("+")
+						.setCta()
+						.onClick(async () => {
+							this.plugin.settings.limitToOneFileWithTrigger.push({path: ""});
+							this.plugin.settings._enableOneFile = true;
+							await this.plugin.saveSettings();
+							return this.display();
+						});
+				});
+		}
+		this.plugin.settings.limitToOneFileWithTrigger.forEach((file, index) => {
 			const newFileSetting = new Setting(this.containerEl)
 				.setClass("at-symbol-linking-folder-container")
 				.addSearch((cb) => {
 					new FileSuggestWithPath(this.app, cb.inputEl);
 					cb.setPlaceholder("File")
-						.setValue(file)
+						.setValue(file.path)
 						.onChange(async (newFile) => {
-							this.plugin.settings.limitToOneFile[index] =
+							this.plugin.settings.limitToOneFileWithTrigger[index].path =
 								newFile.trim();
 							await this.plugin.saveSettings();
 						});
@@ -162,12 +174,24 @@ export class SettingsTab extends PluginSettingTab {
 						this.validate();
 					};
 				})
+				.addText((text) => {
+					text
+						.setPlaceholder("Trigger symbol")
+						.setValue(file.triggerSymbol ?? this.plugin.settings.triggerSymbol)
+						.onChange(async (value) => {
+							this.plugin.settings.limitToOneFileWithTrigger[
+								index
+							].triggerSymbol = value;
+							await this.plugin.saveSettings();
+						})
+						.inputEl.addClass("min-width");
+				})
 				.addExtraButton((cb) => {
 					cb.setIcon("up-chevron-glyph")
 						.setTooltip("Move up")
 						.onClick(async () => {
 							arrayMove(
-								this.plugin.settings.limitToOneFile,
+								this.plugin.settings.limitToOneFileWithTrigger,
 								index,
 								index - 1
 							);
@@ -180,7 +204,7 @@ export class SettingsTab extends PluginSettingTab {
 						.setTooltip("Move down")
 						.onClick(async () => {
 							arrayMove(
-								this.plugin.settings.limitToOneFile,
+								this.plugin.settings.limitToOneFileWithTrigger,
 								index,
 								index + 1
 							);
@@ -192,7 +216,7 @@ export class SettingsTab extends PluginSettingTab {
 					cb.setIcon("cross")
 						.setTooltip("Delete")
 						.onClick(async () => {
-							this.plugin.settings.limitToOneFile.splice(index, 1);
+							this.plugin.settings.limitToOneFileWithTrigger.splice(index, 1);
 							await this.plugin.saveSettings();
 							this.display();
 						});
@@ -201,8 +225,9 @@ export class SettingsTab extends PluginSettingTab {
 			newFileSetting.infoEl.remove();
 		});
 		
+		if (this.plugin.settings.limitToOneFileWithTrigger.length === 0 && this.plugin.settings.limitLinkDirectoriesWithTrigger.length === 0) this.plugin.settings._enableOneFile = false;
 		
-		if (this.plugin.settings.limitToOneFile.length > 0) {
+		if (this.plugin.settings._enableOneFile) {
 			const snRdTh = this.plugin.settings.headerLevelForContact === 2 ? "nd" : this.plugin.settings.headerLevelForContact === 3 ? "rd" : this.plugin.settings.headerLevelForContact === 1 ? "st" : "th";
 			const atTheLevel = this.plugin.settings.headerLevelForContact === 0 ? "at the 1st level" : `at the ${this.plugin.settings.headerLevelForContact}${snRdTh} level`;
 			//Begin headerLevelForContact option
@@ -265,29 +290,42 @@ export class SettingsTab extends PluginSettingTab {
 						.setButtonText("+")
 						.setCta()
 						.onClick(async () => {
-							this.plugin.settings.limitLinkDirectories.push("");
+							this.plugin.settings.limitLinkDirectoriesWithTrigger.push({path:""});
+							this.plugin.settings._enableOneFile = false;
 							await this.plugin.saveSettings();
 							return this.display();
 						});
 				});
 
-			this.plugin.settings.limitLinkDirectories.forEach(
+			this.plugin.settings.limitLinkDirectoriesWithTrigger.forEach(
 				(directory, index) => {
 					const newDirectorySetting = new Setting(this.containerEl)
 						.setClass("at-symbol-linking-folder-container")
 						.addSearch((cb) => {
 							new FolderSuggest(this.app, cb.inputEl);
 							cb.setPlaceholder("Folder")
-								.setValue(directory)
+								.setValue(directory.path)
 								.onChange(async (newFolder) => {
-									this.plugin.settings.limitLinkDirectories[
+									this.plugin.settings.limitLinkDirectoriesWithTrigger[
 										index
-									] = newFolder.trim();
+									].path = newFolder.trim();
 									await this.plugin.saveSettings();
 								});
 							cb.inputEl.onblur = () => {
 								this.validate();
 							};
+						})
+						.addText((text) => {
+							text
+								.setPlaceholder("Trigger symbol")
+								.setValue(directory.triggerSymbol ?? this.plugin.settings.triggerSymbol)
+								.onChange(async (value) => {
+									this.plugin.settings.limitLinkDirectoriesWithTrigger[
+										index
+									].triggerSymbol = value;
+									await this.plugin.saveSettings();
+								})
+								.inputEl.addClass("min-width");
 						})
 						.addExtraButton((cb) => {
 							cb.setIcon("up-chevron-glyph")
@@ -295,7 +333,7 @@ export class SettingsTab extends PluginSettingTab {
 								.onClick(async () => {
 									arrayMove(
 										this.plugin.settings
-											.limitLinkDirectories,
+											.limitLinkDirectoriesWithTrigger,
 										index,
 										index - 1
 									);
@@ -309,7 +347,7 @@ export class SettingsTab extends PluginSettingTab {
 								.onClick(async () => {
 									arrayMove(
 										this.plugin.settings
-											.limitLinkDirectories,
+											.limitLinkDirectoriesWithTrigger,
 										index,
 										index + 1
 									);
@@ -321,7 +359,7 @@ export class SettingsTab extends PluginSettingTab {
 							cb.setIcon("cross")
 								.setTooltip("Delete")
 								.onClick(async () => {
-									this.plugin.settings.limitLinkDirectories.splice(
+									this.plugin.settings.limitLinkDirectoriesWithTrigger.splice(
 										index,
 										1
 									);
@@ -348,9 +386,9 @@ export class SettingsTab extends PluginSettingTab {
 				.addToggle((toggle) =>
 					toggle
 						.setValue(this.plugin.settings.showAddNewNote)
-						.onChange((value: boolean) => {
+						.onChange(async (value: boolean) => {
 							this.plugin.settings.showAddNewNote = value;
-							this.plugin.saveSettings();
+							await this.plugin.saveSettings();
 							this.display();
 						})
 				);
@@ -577,18 +615,18 @@ export class SettingsTab extends PluginSettingTab {
 		}
 
 		// Folders should exist
-		for (let i = 0; i < settings.limitLinkDirectories.length; i++) {
-			const folder = settings.limitLinkDirectories[i];
-			if (folder === "") {
+		for (let i = 0; i < settings.limitLinkDirectoriesWithTrigger.length; i++) {
+			const folder = settings.limitLinkDirectoriesWithTrigger[i];
+			if (folder.path === "") {
 				continue;
 			}
-			const folderFile = this.app.vault.getAbstractFileByPath(folder);
+			const folderFile = this.app.vault.getAbstractFileByPath(folder.path);
 			if (!folderFile) {
 				new Notice(
 					`Unable to find folder at path: ${folder}. Please add it if you want to limit links to this folder.`
 				);
-				const newFolders = [...settings.limitLinkDirectories];
-				newFolders[i] = "";
+				const newFolders = [...settings.limitLinkDirectoriesWithTrigger];
+				newFolders[i].path = "";
 				await updateSetting("limitLinkDirectories", newFolders);
 			}
 		}

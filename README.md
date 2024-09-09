@@ -11,14 +11,16 @@ You can limit `@` links to:
 	- From specific directories, like your `People/` directory.
 	- **Or** from **specific files**, like your `People.md` file. You can configure the level heading using the slider. 
 
-Depending of the previous settings, the creation of a not found `@` link will:
+Depending on the previous settings, the creation of a not found `@` link will:
 	- Create a new note from a template in a specified directory (for directories linking)
 	- **Only if a path is set in the `Use one file for all links`**, append the contact name in the file, as heading.
 
 - Turn on compatibility mode to enable `@` linking when plugins that show suggestions like the [Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks) are enabled.
-- Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)`
+- Optionally include the `@` symbol in the final link text, e.g. `[@evan](./evan.md)` as opposed to `[evan](./evan.md)` (all trigger symbol will follow this setting.)
 
 Uses the link type specified by your Obsidian `"Files & Links" -> "Use [[Wikiliks]]"` setting.
+
+It is also possible to set a trigger per files or folders. By default, the default trigger will be set when a new folder/file is added.
 
 ## Hotkeys
 

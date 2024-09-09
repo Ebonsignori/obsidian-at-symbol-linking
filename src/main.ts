@@ -93,6 +93,23 @@ export default class AtSymbolLinking extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
+		if (this.settings.limitLinkDirectories && this.settings.limitLinkDirectoriesWithTrigger.length === 0) {
+			for (const file of this.settings.limitLinkDirectories) {
+				this.settings.limitLinkDirectoriesWithTrigger.push({
+					path: file,
+				});
+			}
+			delete this.settings.limitLinkDirectories;
+		}
+		if (this.settings.limitToOneFileWithTrigger.length === 0 && this.settings.limitToOneFile) {
+			for (const file of this.settings.limitToOneFile) {
+				this.settings.limitToOneFileWithTrigger.push({
+					path: file
+				});
+			}
+			delete this.settings.limitToOneFile;
+		}
+		await this.saveSettings();
 	}
 
 	async saveSettings() {

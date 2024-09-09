@@ -113,7 +113,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 	protected app: App;
 	protected inputEl: HTMLDivElement;
 	protected settings: AtSymbolLinkingSettings;
-
+	private triggerSymbol: string;
 	private popper: PopperInstance;
 	private scope: Scope;
 	private suggestEl: HTMLElement;
@@ -124,6 +124,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		app: App,
 		inputEl: HTMLDivElement,
 		settings: AtSymbolLinkingSettings,
+		triggerSymbol: string,
 		onSelect: (linkText: string) => void
 	) {
 		this.app = app;
@@ -131,6 +132,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		this.settings = settings;
 		this.scope = new Scope();
 		this.onSelect = onSelect;
+		this.triggerSymbol = triggerSymbol;
 
 		this.suggestEl = createDiv("suggestion-container");
 		if (Platform.isMobile) {
@@ -222,11 +224,11 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 	}
 
 	getSuggestions(query: string): Fuzzysort.KeysResult<fileOption>[] {
-		if (this.settings.limitToOneFile.length > 0) {
-			return sharedGetMonoFileSuggestion(query, this.settings, this.app);
+		if (this.settings.limitToOneFileWithTrigger.length > 0) {
+			return sharedGetMonoFileSuggestion(query, this.settings, this.app, this.triggerSymbol);
 		} else {
 			const files = this.app.vault.getMarkdownFiles();
-			return sharedGetSuggestions(files, query, this.settings, this.app);
+			return sharedGetSuggestions(files, query, this.settings, this.app, this.triggerSymbol);
 		}
 	}
 
@@ -234,7 +236,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		value: Fuzzysort.KeysResult<fileOption>,
 		el: HTMLElement
 	): void {
-		sharedRenderSuggestion(value, el, this.settings.limitToOneFile.length);
+		sharedRenderSuggestion(value, el, this.settings.limitToOneFileWithTrigger.length);
 	}
 
 	async selectSuggestion(
@@ -243,6 +245,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		const linkText = await sharedSelectSuggestion(
 			this.app,
 			this.settings,
+			this.triggerSymbol,
 			value
 		);
 

@@ -17,7 +17,6 @@ export function atSymbolTriggerExtension(
 	return ViewPlugin.fromClass(
 		class AtSymbolTriggerExtension implements PluginValue {
 			private readonly view: EditorView;
-
 			private firstOpenedCursor: EditorPosition | null = null;
 			private openQuery = "";
 			private isOpen = false;
@@ -79,9 +78,9 @@ export function atSymbolTriggerExtension(
 				let isInValidContext = true;
 				const cursor = (<any>this.view)?.viewState.state?.selection
 					?.main as {
-					from: number;
-					to: number;
-				};
+						from: number;
+						to: number;
+					};
 				syntaxTree((<any>this.view)?.viewState?.state).iterate({
 					from: cursor.from,
 					to: cursor.to,
@@ -104,9 +103,10 @@ export function atSymbolTriggerExtension(
 				if (!isInValidContext) {
 					return false;
 				}
-
+				const triggerFileSymbol = settings.limitToOneFileWithTrigger.map((file) => file.triggerSymbol);
+				const triggerFolderSymbol = settings.limitLinkDirectoriesWithTrigger.map((dir) => dir.triggerSymbol);
 				let justOpened = false;
-				if (!this.isOpen && typedChar === settings.triggerSymbol) {
+				if (!this.isOpen && typedChar === settings.triggerSymbol || triggerFileSymbol.includes(typedChar) || triggerFolderSymbol.includes(typedChar)) {
 					justOpened = true;
 					this.openSuggestion();
 				} else if (!this.isOpen) {
@@ -139,7 +139,7 @@ export function atSymbolTriggerExtension(
 				// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
 				if (
 					this.openQuery.split(" ").length - 1 >
-						settings.leavePopupOpenForXSpaces ||
+					settings.leavePopupOpenForXSpaces ||
 					// Also close if the query starts with a space, regardless of space settings
 					this.openQuery.startsWith(" ")
 				) {
@@ -186,6 +186,7 @@ export function atSymbolTriggerExtension(
 						app,
 						this.suggestionEl,
 						settings,
+						typedChar,
 						this.onSelect.bind(this)
 					);
 					this.suggestionPopup.onInputChanged(this.openQuery);
