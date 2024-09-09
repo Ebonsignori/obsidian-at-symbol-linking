@@ -1,6 +1,6 @@
 {
   "name": "at-symbol-linking",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "",
   "main": "main.js",
   "engines": {
@@ -12,7 +12,11 @@
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "bump": "commit-and-tag-version"
+  },
+  "commit-and-tag-version": {
+    "t": ""
   },
   "keywords": [],
   "author": "Evan Bonsignori",
@@ -22,6 +26,7 @@
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
     "builtin-modules": "3.3.0",
+    "commit-and-tag-version": "^12.4.3",
     "esbuild": "0.17.3",
     "eslint": "^8.46.0",
     "eslint-config-prettier": "^8.10.0",
