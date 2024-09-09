@@ -18,12 +18,17 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
+          cache: 'pnpm'
 
       - name: Build and zip
         id: build
@@ -37,8 +42,8 @@ jobs:
           jq --arg tag "$tag" '.version = $tag' package.json >> tmp.$$.json && mv tmp.$$.json package.json
 
           # Build and zip release
-          npm install
-          npm run build
+          pnpm install
+          pnpm run build
           mkdir ${{ env.PLUGIN_NAME }}
           cp styles.css main.js manifest.json ${{ env.PLUGIN_NAME }}
           zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
