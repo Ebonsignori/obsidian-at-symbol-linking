@@ -1,7 +1,7 @@
 {
 	"id": "symbol-linking",
 	"name": "Symbol linking",
-	"version": "1.8.0",
+	"version": "1.0.0",
 	"minAppVersion": "1.7.1",
 	"description": "Adds ability to link with any symbol as trigger in Obsidian. Can limit linking to specific folders or files.",
 	"author": "Evan Bonsignori ; Mara-Li",
