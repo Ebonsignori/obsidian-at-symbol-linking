@@ -1,6 +1,6 @@
 import pkg from "ansi-colors";
 import { Command, Option } from "commander";
-import commitAndTagVersion from "commit-and-tag-version.mjs";
+import commitAndTagVersion from "commit-and-tag-version";
 import dedent from "dedent";
 const { red, dim, gray, italic, bold, cyan, blue, green, underline, yellow, theme } = pkg;
 

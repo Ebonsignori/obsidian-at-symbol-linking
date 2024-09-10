@@ -1,6 +1,6 @@
 {
 	"name": "at-symbol-linking",
-	"version": "1.7.0",
+	"version": "1.8.0",
 	"description": "",
 	"main": "main.js",
 	"engines": {
@@ -29,6 +29,7 @@
 		"builtin-modules": "3.3.0",
 		"commander": "^12.1.0",
 		"commit-and-tag-version": "^12.4.3",
+		"dedent": "^1.5.3",
 		"dotenv": "^16.4.5",
 		"esbuild": "0.17.3",
 		"obsidian": "latest",
