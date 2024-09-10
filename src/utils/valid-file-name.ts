@@ -1,9 +1,6 @@
-import { AtSymbolLinkingSettings } from "../settings/compatibility";
+import type { CustomSuggester } from "../settings/interface";
 
-export const isValidFileNameCharacter = (
-	char: string,
-	settings: AtSymbolLinkingSettings,
-) => {
+export const isValidFileNameCharacter = (char: string, settings: CustomSuggester) => {
 	if (char === " ") {
 		return true;
 	}

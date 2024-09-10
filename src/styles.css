@@ -3,10 +3,8 @@
 	border: none;
 }
 
-.at-symbol-linking-folder-setting {
-	.search-input-container {
-		width: 100%;
-	}
+.at-symbol-linking-folder-setting .search-input-container {
+	width: 100%;
 }
 
 .at-symbol-linking-suggestion {
