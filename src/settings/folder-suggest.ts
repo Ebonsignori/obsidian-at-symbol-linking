@@ -1,11 +1,9 @@
 import fuzzysort from "fuzzysort";
-import { TAbstractFile, TFolder } from "obsidian";
+import { type TAbstractFile, TFolder } from "obsidian";
 import { highlightSearch } from "src/utils/highlight-search";
 import { TextInputSuggest } from "src/utils/suggest";
 
-export class FolderSuggest extends TextInputSuggest<
-	Fuzzysort.KeyResult<TFolder>
-> {
+export class FolderSuggest extends TextInputSuggest<Fuzzysort.KeyResult<TFolder>> {
 	getSuggestions(inputStr: string): Fuzzysort.KeyResult<TFolder>[] {
 		const abstractFiles = this.app.vault.getAllLoadedFiles();
 		const folders: TFolder[] = [];

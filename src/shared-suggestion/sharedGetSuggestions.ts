@@ -1,25 +1,25 @@
 import fuzzysort from "fuzzysort";
-import { App, TFile, normalizePath } from "obsidian";
-import { type AtSymbolLinkingSettings } from "src/settings/settings";
-import { type fileOption } from "src/types";
-import { removeAccents } from "src/utils/remove-accents";
+import { type App, TFile, normalizePath } from "obsidian";
+import type { FileOption } from "src/types";
+import type { CustomSuggester } from "../settings/interface";
 
 export function sharedGetSuggestions(
 	files: TFile[],
 	query: string,
-	settings: AtSymbolLinkingSettings,
+	settings: CustomSuggester,
 	app: App,
-	typedChar: string
-): Fuzzysort.KeysResult<fileOption>[] {
-	const options: fileOption[] = [];
-	const newFolderOfcreation = normalizePath(settings.addNewNoteDirectory.trim() + "/");
-	const allNewFolder:Set<string> = new Set();
-	if (settings.addNewNoteDirectory.trim().length >0) allNewFolder.add(newFolderOfcreation);
+	typedChar: string,
+): Fuzzysort.KeysResult<FileOption>[] {
+	const options: FileOption[] = [];
+	const newFolderOfcreation = normalizePath(`${settings.addNewNoteDirectory.trim()}/`);
+	const allNewFolder: Set<string> = new Set();
+	if (settings.addNewNoteDirectory.trim().length > 0)
+		allNewFolder.add(newFolderOfcreation);
 	for (const file of files) {
 		// If there are folders to limit links to, check if the file is in one of them
-		if (settings.limitLinkDirectoriesWithTrigger.length > 0) {
+		if (settings.limitToDirectories.length > 0) {
 			let isAllowed = false;
-			for (const folder of settings.limitLinkDirectoriesWithTrigger) {
+			for (const folder of settings.limitToDirectories) {
 				if (typedChar !== folder.triggerSymbol) continue;
 				if (file.parent?.path.startsWith(folder.path)) {
 					isAllowed = true;
@@ -32,38 +32,31 @@ export function sharedGetSuggestions(
 			}
 		}
 		const meta = app.metadataCache.getFileCache(file);
+		const fileName = settings.removeAccents
+			? file.basename.removeAccents()
+			: file.basename;
 		if (meta?.frontmatter?.alias) {
 			options.push({
-				fileName: settings.removeAccents
-					? removeAccents(file.basename)
-					: file.basename,
+				fileName,
 				filePath: file.path,
 				alias: meta.frontmatter.alias,
 			});
 		} else if (meta?.frontmatter?.aliases) {
 			let aliases = meta.frontmatter.aliases;
 			if (typeof meta.frontmatter.aliases === "string") {
-				aliases = meta.frontmatter.aliases
-					.split(",")
-					.map((s) => s.trim());
+				aliases = meta.frontmatter.aliases.split(",").map((s) => s.trim());
 			}
 			for (const alias of aliases) {
 				options.push({
-					fileName: settings.removeAccents
-						? removeAccents(file.basename)
-						: file.basename,
+					fileName,
 					filePath: file.path,
-					alias: settings.removeAccents
-						? removeAccents(alias)
-						: alias,
+					alias: settings.removeAccents ? alias.removeAccents() : alias,
 				});
 			}
 		}
 		// Include fileName without alias as well
 		options.push({
-			fileName: settings.removeAccents
-				? removeAccents(file.basename)
-				: file.basename,
+			fileName,
 			filePath: file.path,
 		});
 	}
@@ -89,14 +82,12 @@ export function sharedGetSuggestions(
 		console.log(newFolderOfcreation);
 		// Don't show if it has the same filename as an existing note
 		const hasExistingNote = results.some(
-			(result: Fuzzysort.KeysResult<fileOption>) =>
-				result?.obj?.fileName.toLocaleLowerCase() ===
-				query?.toLocaleLowerCase()
+			(result: Fuzzysort.KeysResult<FileOption>) =>
+				result?.obj?.fileName.toLocaleLowerCase() === query?.toLocaleLowerCase(),
 		);
 		if (!hasExistingNote) {
 			results = results.filter(
-				(result: Fuzzysort.KeysResult<fileOption>) =>
-					!result.obj?.isCreateNewOption
+				(result: Fuzzysort.KeysResult<FileOption>) => !result.obj?.isCreateNewOption,
 			);
 			for (const folder of allNewFolder) {
 				results.push({
@@ -116,33 +107,39 @@ export function sharedGetSuggestions(
 
 export function sharedGetMonoFileSuggestion(
 	query: string,
-	settings: AtSymbolLinkingSettings,
+	settings: CustomSuggester,
 	app: App,
-	typedChar: string
-): Fuzzysort.KeysResult<fileOption>[] {
-	if (settings.limitToOneFileWithTrigger.length === 0) return [];
-	const files: TFile[] = settings.limitToOneFileWithTrigger.filter((x)=>x.triggerSymbol== typedChar).map((path) => {
-		const file = app.vault.getAbstractFileByPath(path.path);
-		if (file && file instanceof TFile) return file;
-		return null;
-	}).filter((file) => file !== null) as TFile[];
+	typedChar: string,
+): Fuzzysort.KeysResult<FileOption>[] {
+	if (settings.limitToFile.length === 0) return [];
+	const files: TFile[] = settings.limitToFile
+		.filter((x) => x.triggerSymbol == typedChar)
+		.map((path) => {
+			const file = app.vault.getAbstractFileByPath(path.path);
+			if (file && file instanceof TFile) return file;
+			return null;
+		})
+		.filter((file) => file !== null) as TFile[];
 	if (files.length === 0) return [];
-	const options: fileOption[] = [];
+	const options: FileOption[] = [];
 	for (const file of files) {
 		const meta = app.metadataCache.getFileCache(file);
 		if (!meta || !meta.headings) return [];
-		
-		const heading = settings.headerLevelForContact === 0 ? meta.headings : meta.headings.filter(
-			(heading) => heading.level === settings.headerLevelForContact
-		);
-		const option: fileOption[] = heading.map((heading) => ({
+
+		const heading =
+			settings.headerLevelForContact === 0
+				? meta.headings
+				: meta.headings.filter(
+						(heading) => heading.level === settings.headerLevelForContact,
+					);
+		const option: FileOption[] = heading.map((heading) => ({
 			fileName: heading.heading,
 			filePath: file.path,
 		}));
 		options.push(...option);
 	}
 	if (options.length === 0) return [];
-	
+
 	let results = [];
 	if (!query) {
 		results = options.map((option) => ({
@@ -155,14 +152,12 @@ export function sharedGetMonoFileSuggestion(
 	}
 	if (settings.appendAsHeader && query) {
 		const hasExistingHeader = results.some(
-			(result: Fuzzysort.KeysResult<fileOption>) =>
-				result?.obj?.fileName.toLocaleLowerCase() ===
-				query?.toLocaleLowerCase()
+			(result: Fuzzysort.KeysResult<FileOption>) =>
+				result?.obj?.fileName.toLocaleLowerCase() === query?.toLocaleLowerCase(),
 		);
 		if (!hasExistingHeader) {
 			results = results.filter(
-				(result: Fuzzysort.KeysResult<fileOption>) =>
-					!result.obj?.isCreateNewOption
+				(result: Fuzzysort.KeysResult<FileOption>) => !result.obj?.isCreateNewOption,
 			);
 			for (const file of files) {
 				results.push({

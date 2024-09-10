@@ -1,15 +1,15 @@
+import { type Instance as PopperInstance, createPopper } from "@popperjs/core";
 // Code derived from https://github.com/farux/obsidian-auto-note-mover
-import { App, Platform, Scope } from "obsidian";
-import { createPopper, Instance as PopperInstance } from "@popperjs/core";
+import { type App, Platform, Scope } from "obsidian";
 import type { ISuggestOwner as IOwner } from "obsidian";
-import { AtSymbolLinkingSettings } from "src/settings/settings";
-import { fileOption } from "src/types";
-import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
-import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
 import {
 	sharedGetMonoFileSuggestion,
 	sharedGetSuggestions,
 } from "src/shared-suggestion/sharedGetSuggestions";
+import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
+import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
+import type { FileOption } from "src/types";
+import type { CustomSuggester } from "../settings/interface";
 
 export class Suggest<T> {
 	private owner: IOwner<T>;
@@ -22,15 +22,11 @@ export class Suggest<T> {
 		this.owner = owner;
 		this.containerEl = containerEl;
 
-		containerEl.on(
-			"click",
-			".suggestion-item",
-			this.onSuggestionClick.bind(this)
-		);
+		containerEl.on("click", ".suggestion-item", this.onSuggestionClick.bind(this));
 		containerEl.on(
 			"mousemove",
 			".suggestion-item",
-			this.onSuggestionMouseover.bind(this)
+			this.onSuggestionMouseover.bind(this),
 		);
 
 		scope.register([], "ArrowUp", (event) => {
@@ -91,10 +87,7 @@ export class Suggest<T> {
 	}
 
 	setSelectedItem(selectedIndex: number, scrollIntoView: boolean) {
-		const normalizedIndex = wrapAround(
-			selectedIndex,
-			this.suggestions.length
-		);
+		const normalizedIndex = wrapAround(selectedIndex, this.suggestions.length);
 		const prevSelectedSuggestion = this.suggestions[this.selectedItem];
 		const selectedSuggestion = this.suggestions[normalizedIndex];
 
@@ -109,23 +102,23 @@ export class Suggest<T> {
 	}
 }
 
-export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
+export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 	protected app: App;
 	protected inputEl: HTMLDivElement;
-	protected settings: AtSymbolLinkingSettings;
+	protected settings: CustomSuggester;
 	private triggerSymbol: string;
 	private popper: PopperInstance;
 	private scope: Scope;
 	private suggestEl: HTMLElement;
-	private suggest: Suggest<Fuzzysort.KeysResult<fileOption>>;
+	private suggest: Suggest<Fuzzysort.KeysResult<FileOption>>;
 	private onSelect: (linkText: string) => void;
 
 	constructor(
 		app: App,
 		inputEl: HTMLDivElement,
-		settings: AtSymbolLinkingSettings,
+		settings: CustomSuggester,
 		triggerSymbol: string,
-		onSelect: (linkText: string) => void
+		onSelect: (linkText: string) => void,
 	) {
 		this.app = app;
 		this.inputEl = inputEl;
@@ -149,13 +142,9 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 
 		this.inputEl.addEventListener("focus", this.onInputChanged.bind(this));
 		this.inputEl.addEventListener("blur", this.close.bind(this));
-		this.suggestEl.on(
-			"mousedown",
-			".suggestion-container",
-			(event: MouseEvent) => {
-				event.preventDefault();
-			}
-		);
+		this.suggestEl.on("mousedown", ".suggestion-container", (event: MouseEvent) => {
+			event.preventDefault();
+		});
 	}
 
 	onInputChanged(inputStr: string): void {
@@ -180,9 +169,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 					name: "flip",
 					options: {
 						flipVariations: false,
-						fallbackPlacements: [
-							Platform.isMobile ? "top" : "right",
-						],
+						fallbackPlacements: [Platform.isMobile ? "top" : "right"],
 					},
 				},
 				{
@@ -216,37 +203,40 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		this.suggest.setSuggestions([]);
 		this.popper?.destroy();
 		this.suggestEl.detach();
-		this.inputEl.removeEventListener(
-			"focus",
-			this.onInputChanged.bind(this)
-		);
+		this.inputEl.removeEventListener("focus", this.onInputChanged.bind(this));
 		this.inputEl.removeEventListener("blur", this.close.bind(this));
 	}
 
-	getSuggestions(query: string): Fuzzysort.KeysResult<fileOption>[] {
-		if (this.settings.limitToOneFileWithTrigger.length > 0) {
-			return sharedGetMonoFileSuggestion(query, this.settings, this.app, this.triggerSymbol);
+	getSuggestions(query: string): Fuzzysort.KeysResult<FileOption>[] {
+		if (this.settings.limitToFile.length > 0) {
+			return sharedGetMonoFileSuggestion(
+				query,
+				this.settings,
+				this.app,
+				this.triggerSymbol,
+			);
 		} else {
 			const files = this.app.vault.getMarkdownFiles();
-			return sharedGetSuggestions(files, query, this.settings, this.app, this.triggerSymbol);
+			return sharedGetSuggestions(
+				files,
+				query,
+				this.settings,
+				this.app,
+				this.triggerSymbol,
+			);
 		}
 	}
 
-	renderSuggestion(
-		value: Fuzzysort.KeysResult<fileOption>,
-		el: HTMLElement
-	): void {
-		sharedRenderSuggestion(value, el, this.settings.limitToOneFileWithTrigger.length);
+	renderSuggestion(value: Fuzzysort.KeysResult<FileOption>, el: HTMLElement): void {
+		sharedRenderSuggestion(value, el, this.settings.limitToFile.length);
 	}
 
-	async selectSuggestion(
-		value: Fuzzysort.KeysResult<fileOption>
-	): Promise<void> {
+	async selectSuggestion(value: Fuzzysort.KeysResult<FileOption>): Promise<void> {
 		const linkText = await sharedSelectSuggestion(
 			this.app,
 			this.settings,
 			this.triggerSymbol,
-			value
+			value,
 		);
 
 		this.onSelect(linkText);

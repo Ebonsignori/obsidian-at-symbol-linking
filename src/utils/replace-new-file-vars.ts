@@ -15,20 +15,18 @@ import type { App } from "obsidian";
 export async function replaceNewFileVars(
 	app: App,
 	templateContent: string,
-	title: string
+	title: string,
 ): Promise<string> {
 	if (!templateContent) return templateContent;
 
 	const coreTemplatesConfigPath = ".obsidian/templates.json";
 	let coreTemplatesConfig;
 	try {
-		coreTemplatesConfig = await app.vault.adapter.read(
-			coreTemplatesConfigPath
-		);
+		coreTemplatesConfig = await app.vault.adapter.read(coreTemplatesConfigPath);
 		coreTemplatesConfig = JSON.parse(coreTemplatesConfig);
 	} catch (error) {
 		console.error(
-			`@ Symbol Linking: Unable to read core plugin templates config at path: ${coreTemplatesConfigPath}`
+			`@ Symbol Linking: Unable to read core plugin templates config at path: ${coreTemplatesConfigPath}`,
 		);
 		console.log(error);
 		return templateContent;
@@ -43,14 +41,8 @@ export async function replaceNewFileVars(
 		timeFormat = coreTemplatesConfig.timeFormat;
 	}
 
-	templateContent = templateContent.replace(
-		/{{date}}/g,
-		moment().format(dateFormat)
-	);
-	templateContent = templateContent.replace(
-		/{{time}}/g,
-		moment().format(timeFormat)
-	);
+	templateContent = templateContent.replace(/{{date}}/g, moment().format(dateFormat));
+	templateContent = templateContent.replace(/{{time}}/g, moment().format(timeFormat));
 	templateContent = templateContent.replace(/{{title}}/g, title);
 
 	return templateContent;

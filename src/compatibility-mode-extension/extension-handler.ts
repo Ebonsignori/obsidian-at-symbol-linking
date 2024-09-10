@@ -1,19 +1,15 @@
 import { syntaxTree } from "@codemirror/language";
 import { ViewPlugin } from "@codemirror/view";
-import type { PluginValue, EditorView, Rect } from "@codemirror/view";
-import { Platform, type App, type EditorPosition } from "obsidian";
-import { AtSymbolLinkingSettings } from "src/settings/settings";
-import { LinkSuggest } from "./extension-popup";
+import type { EditorView, PluginValue, Rect } from "@codemirror/view";
+import { type App, type EditorPosition, Platform } from "obsidian";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
-import { removeAccents } from "src/utils/remove-accents";
+import type { CustomSuggester } from "../settings/interface";
+import { LinkSuggest } from "./extension-popup";
 
 // Max parents we will iterate through to determine if a click event is outside the suggestion popup
 const maxParentDepth = 5;
 
-export function atSymbolTriggerExtension(
-	app: App,
-	settings: AtSymbolLinkingSettings
-) {
+export function atSymbolTriggerExtension(app: App, settings: CustomSuggester) {
 	return ViewPlugin.fromClass(
 		class AtSymbolTriggerExtension implements PluginValue {
 			private readonly view: EditorView;
@@ -32,10 +28,7 @@ export function atSymbolTriggerExtension(
 			}
 
 			public destroy(): void {
-				this.view.dom.removeEventListener(
-					"keydown",
-					this.handleKeyEvent
-				);
+				this.view.dom.removeEventListener("keydown", this.handleKeyEvent);
 				window.removeEventListener("click", this.handleClickEvent);
 			}
 
@@ -59,11 +52,11 @@ export function atSymbolTriggerExtension(
 			private handleKeyEvent(event: KeyboardEvent): boolean {
 				// Don't enable when editing title
 				let isInTitle = false;
-				(
-					<DOMTokenList>(<HTMLElement>event.target)?.classList || []
-				).forEach((className: string) => {
-					isInTitle = isInTitle || className === "inline-title";
-				});
+				(<DOMTokenList>(<HTMLElement>event.target)?.classList || []).forEach(
+					(className: string) => {
+						isInTitle = isInTitle || className === "inline-title";
+					},
+				);
 				if (isInTitle) {
 					return false;
 				}
@@ -76,11 +69,10 @@ export function atSymbolTriggerExtension(
 				}
 
 				let isInValidContext = true;
-				const cursor = (<any>this.view)?.viewState.state?.selection
-					?.main as {
-						from: number;
-						to: number;
-					};
+				const cursor = (<any>this.view)?.viewState.state?.selection?.main as {
+					from: number;
+					to: number;
+				};
 				syntaxTree((<any>this.view)?.viewState?.state).iterate({
 					from: cursor.from,
 					to: cursor.to,
@@ -103,10 +95,16 @@ export function atSymbolTriggerExtension(
 				if (!isInValidContext) {
 					return false;
 				}
-				const triggerFileSymbol = settings.limitToOneFileWithTrigger.map((file) => file.triggerSymbol);
-				const triggerFolderSymbol = settings.limitLinkDirectoriesWithTrigger.map((dir) => dir.triggerSymbol);
+				const triggerFileSymbol = settings.limitToFile.map((file) => file.triggerSymbol);
+				const triggerFolderSymbol = settings.limitToDirectories.map(
+					(dir) => dir.triggerSymbol,
+				);
 				let justOpened = false;
-				if (!this.isOpen && typedChar === settings.triggerSymbol || triggerFileSymbol.includes(typedChar) || triggerFolderSymbol.includes(typedChar)) {
+				if (
+					(!this.isOpen && typedChar === settings.triggerSymbol) ||
+					triggerFileSymbol.includes(typedChar) ||
+					triggerFolderSymbol.includes(typedChar)
+				) {
 					justOpened = true;
 					this.openSuggestion();
 				} else if (!this.isOpen) {
@@ -138,8 +136,7 @@ export function atSymbolTriggerExtension(
 
 				// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
 				if (
-					this.openQuery.split(" ").length - 1 >
-					settings.leavePopupOpenForXSpaces ||
+					this.openQuery.split(" ").length - 1 > settings.leavePopupOpenForXSpaces ||
 					// Also close if the query starts with a space, regardless of space settings
 					this.openQuery.startsWith(" ")
 				) {
@@ -147,12 +144,11 @@ export function atSymbolTriggerExtension(
 				}
 
 				if (settings.removeAccents) {
-					this.openQuery = removeAccents(this.openQuery);
+					this.openQuery = this.openQuery.removeAccents();
 				}
 
 				if (!this.suggestionEl && this.firstOpenedCursor && this.view) {
-					const container = (<any>app).dom
-						.appContainerEl as HTMLElement;
+					const container = (<any>app).dom.appContainerEl as HTMLElement;
 					this.suggestionEl = createDiv();
 					this.suggestionEl.style.position = "absolute";
 					this.suggestionEl.style.zIndex = "1000";
@@ -161,22 +157,19 @@ export function atSymbolTriggerExtension(
 					this.suggestionEl.style.height = "0px";
 
 					if (Platform.isDesktop) {
-						const { left: leftOffset, top: topOffset } =
-							this.view.coordsAtPos(
-								(<EditorPosition>this.firstOpenedCursor)?.ch
-							) as Rect;
+						const { left: leftOffset, top: topOffset } = this.view.coordsAtPos(
+							(<EditorPosition>this.firstOpenedCursor)?.ch,
+						) as Rect;
 
-						this.suggestionEl.style.left = leftOffset + "px";
+						this.suggestionEl.style.left = `${leftOffset}px`;
 						// const currentLineElement =
 						// 	container.getElementsByClassName("cm-active cm-line")?.[0];
 						// const lineElementHeight =
 						// 	currentLineElement?.getBoundingClientRect()?.height || 24;
 						const lineElementHeight = 24;
-						this.suggestionEl.style.top =
-							topOffset + lineElementHeight + "px";
+						this.suggestionEl.style.top = `${topOffset + lineElementHeight}px`;
 					} else {
-						this.suggestionEl.style.bottom =
-							"var(--mobile-toolbar-height)";
+						this.suggestionEl.style.bottom = "var(--mobile-toolbar-height)";
 						this.suggestionEl.style.left = "0px";
 					}
 
@@ -187,7 +180,7 @@ export function atSymbolTriggerExtension(
 						this.suggestionEl,
 						settings,
 						typedChar,
-						this.onSelect.bind(this)
+						this.onSelect.bind(this),
 					);
 					this.suggestionPopup.onInputChanged(this.openQuery);
 				}
@@ -229,20 +222,17 @@ export function atSymbolTriggerExtension(
 								to: cursor.ch,
 								insert: linkText,
 							},
-						})
+						}),
 					);
 				} catch (error) {
-					console.log(
-						"@ Symbol Linking: Error creating first link",
-						error
-					);
+					console.log("@ Symbol Linking: Error creating first link", error);
 					this.view.dispatch(
 						this.view.state.update({
 							changes: {
 								from: this.firstOpenedCursor?.ch as number,
 								insert: linkText,
 							},
-						})
+						}),
 					);
 				}
 
@@ -257,6 +247,6 @@ export function atSymbolTriggerExtension(
 					line,
 				};
 			}
-		}
+		},
 	);
 }

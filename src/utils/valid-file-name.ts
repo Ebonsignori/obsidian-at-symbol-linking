@@ -1,8 +1,8 @@
-import { AtSymbolLinkingSettings } from "src/settings/settings";
+import { AtSymbolLinkingSettings } from "../settings/compatibility";
 
 export const isValidFileNameCharacter = (
 	char: string,
-	settings: AtSymbolLinkingSettings
+	settings: AtSymbolLinkingSettings,
 ) => {
 	if (char === " ") {
 		return true;
@@ -12,6 +12,6 @@ export const isValidFileNameCharacter = (
 	}
 	return !new RegExp(
 		settings.invalidCharacterRegex,
-		settings.invalidCharacterRegexFlags
+		settings.invalidCharacterRegexFlags,
 	).test(char);
 };

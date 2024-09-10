@@ -1,5 +1,5 @@
 // Code derived from https://github.com/tth05/obsidian-completr
-import { KeymapContext } from "obsidian";
+import type { KeymapContext } from "obsidian";
 import { SelectionDirection } from "./suggest-popup";
 
 // Hacky override that lets us use hotkeys when the popup is open from completr
@@ -11,7 +11,7 @@ export function applyHotKeyHack(_this: any, app: any) {
 	const isHotkeyMatch = (
 		hotkey: any,
 		context: KeymapContext,
-		isBypassCommand: boolean
+		isBypassCommand: boolean,
 	): boolean => {
 		// Copied from original isMatch function, modified to not require exactly the same modifiers for
 		// completr-bypass commands. This allows triggering for example Ctrl+Enter even when
@@ -38,54 +38,50 @@ export function applyHotKeyHack(_this: any, app: any) {
 			!(!context.key || key.toLocaleLowerCase() !== context.key.toLocaleLowerCase())
 		);
 	};
-	_this.app.scope.register(
-		null,
-		null,
-		(e: KeyboardEvent, t: KeymapContext) => {
-			const hotkeyManager = app.hotkeyManager;
-			hotkeyManager.bake();
-			for (
-				let bakedHotkeys = hotkeyManager.bakedHotkeys,
-					bakedIds = hotkeyManager.bakedIds,
-					r = 0;
-				r < bakedHotkeys.length;
-				r++
-			) {
-				const hotkey = bakedHotkeys[r];
-				const id = bakedIds[r];
-				const command = app.commands.findCommand(id);
-				const isBypassCommand = command?.isBypassCommand?.();
-				if (isHotkeyMatch(hotkey, t, isBypassCommand)) {
-					// Condition taken from original function
-					if (!command || (e.repeat && !command.repeatable)) {
-						continue;
-					} else if (command.isVisible && !command.isVisible()) {
-						//HACK: Hide our commands when to popup is not visible to allow the keybinds to execute their default action.
-						continue;
-					} else if (isBypassCommand) {
-						_this._suggestionPopup.close();
+	_this.app.scope.register(null, null, (e: KeyboardEvent, t: KeymapContext) => {
+		const hotkeyManager = app.hotkeyManager;
+		hotkeyManager.bake();
+		for (
+			let bakedHotkeys = hotkeyManager.bakedHotkeys,
+				bakedIds = hotkeyManager.bakedIds,
+				r = 0;
+			r < bakedHotkeys.length;
+			r++
+		) {
+			const hotkey = bakedHotkeys[r];
+			const id = bakedIds[r];
+			const command = app.commands.findCommand(id);
+			const isBypassCommand = command?.isBypassCommand?.();
+			if (isHotkeyMatch(hotkey, t, isBypassCommand)) {
+				// Condition taken from original function
+				if (!command || (e.repeat && !command.repeatable)) {
+					continue;
+				} else if (command.isVisible && !command.isVisible()) {
+					//HACK: Hide our commands when to popup is not visible to allow the keybinds to execute their default action.
+					continue;
+				} else if (isBypassCommand) {
+					_this._suggestionPopup.close();
 
-						// @ts-expect-error sure it could be null
-						const validMods = t.modifiers
-							.replace(new RegExp(`${hotkey.modifiers},*`), "")
-							.split(",");
-						// Sends the event again, only keeping the modifiers which didn't activate this command
-						const event = new KeyboardEvent("keydown", {
-							key: hotkeyManager.defaultKeys[id][0].key,
-							ctrlKey: validMods?.contains("Ctrl"),
-							shiftKey: validMods?.contains("Shift"),
-							altKey: validMods?.contains("Alt"),
-							metaKey: validMods?.contains("Meta"),
-						});
-						e?.target?.dispatchEvent(event);
-						return false;
-					}
-
-					if (app.commands.executeCommandById(id)) return false;
+					// @ts-expect-error sure it could be null
+					const validMods = t.modifiers
+						.replace(new RegExp(`${hotkey.modifiers},*`), "")
+						.split(",");
+					// Sends the event again, only keeping the modifiers which didn't activate this command
+					const event = new KeyboardEvent("keydown", {
+						key: hotkeyManager.defaultKeys[id][0].key,
+						ctrlKey: validMods?.contains("Ctrl"),
+						shiftKey: validMods?.contains("Shift"),
+						altKey: validMods?.contains("Alt"),
+						metaKey: validMods?.contains("Meta"),
+					});
+					e?.target?.dispatchEvent(event);
+					return false;
 				}
+
+				if (app.commands.executeCommandById(id)) return false;
 			}
 		}
-	);
+	});
 
 	_this.addCommand({
 		id: "select-next-suggestion",

@@ -1,8 +1,8 @@
+import { type Instance as PopperInstance, createPopper } from "@popperjs/core";
 // Code derived from https://github.com/farux/obsidian-auto-note-mover
-import { App, Scope } from "obsidian";
-import { createPopper, Instance as PopperInstance } from "@popperjs/core";
+import { type App, Scope } from "obsidian";
 import type { ISuggestOwner } from "obsidian";
-import { AtSymbolLinkingSettings } from "src/settings/settings";
+import type { CustomSuggester } from "../settings/interface";
 
 export class Suggest<T> {
 	private owner: ISuggestOwner<T>;
@@ -11,23 +11,15 @@ export class Suggest<T> {
 	private selectedItem: number;
 	private containerEl: HTMLElement;
 
-	constructor(
-		owner: ISuggestOwner<T>,
-		containerEl: HTMLElement,
-		scope: Scope
-	) {
+	constructor(owner: ISuggestOwner<T>, containerEl: HTMLElement, scope: Scope) {
 		this.owner = owner;
 		this.containerEl = containerEl;
 
-		containerEl.on(
-			"click",
-			".suggestion-item",
-			this.onSuggestionClick.bind(this)
-		);
+		containerEl.on("click", ".suggestion-item", this.onSuggestionClick.bind(this));
 		containerEl.on(
 			"mousemove",
 			".suggestion-item",
-			this.onSuggestionMouseover.bind(this)
+			this.onSuggestionMouseover.bind(this),
 		);
 
 		scope.register([], "ArrowUp", (event) => {
@@ -88,10 +80,7 @@ export class Suggest<T> {
 	}
 
 	setSelectedItem(selectedIndex: number, scrollIntoView: boolean) {
-		const normalizedIndex = wrapAround(
-			selectedIndex,
-			this.suggestions.length
-		);
+		const normalizedIndex = wrapAround(selectedIndex, this.suggestions.length);
 		const prevSelectedSuggestion = this.suggestions[this.selectedItem];
 		const selectedSuggestion = this.suggestions[normalizedIndex];
 
@@ -109,14 +98,14 @@ export class Suggest<T> {
 export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 	protected app: App;
 	protected inputEl: HTMLInputElement;
-	protected settings?: AtSymbolLinkingSettings;
+	protected settings?: CustomSuggester;
 
 	private popper: PopperInstance;
 	private scope: Scope;
 	private suggestEl: HTMLElement;
 	private suggest: Suggest<T>;
 
-	constructor(app: App, inputEl: HTMLInputElement, settings?: AtSymbolLinkingSettings) {
+	constructor(app: App, inputEl: HTMLInputElement, settings?: CustomSuggester) {
 		this.app = app;
 		this.inputEl = inputEl;
 		this.scope = new Scope();
@@ -131,13 +120,9 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 		this.inputEl.addEventListener("input", this.onInputChanged.bind(this));
 		this.inputEl.addEventListener("focus", this.onInputChanged.bind(this));
 		this.inputEl.addEventListener("blur", this.close.bind(this));
-		this.suggestEl.on(
-			"mousedown",
-			".suggestion-container",
-			(event: MouseEvent) => {
-				event.preventDefault();
-			}
-		);
+		this.suggestEl.on("mousedown", ".suggestion-container", (event: MouseEvent) => {
+			event.preventDefault();
+		});
 	}
 
 	onInputChanged(): void {
@@ -188,14 +173,8 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
 		this.suggest.setSuggestions([]);
 		this.popper?.destroy();
 		this.suggestEl.detach();
-		this.inputEl.removeEventListener(
-			"input",
-			this.onInputChanged.bind(this)
-		);
-		this.inputEl.removeEventListener(
-			"focus",
-			this.onInputChanged.bind(this)
-		);
+		this.inputEl.removeEventListener("input", this.onInputChanged.bind(this));
+		this.inputEl.removeEventListener("focus", this.onInputChanged.bind(this));
 		this.inputEl.removeEventListener("blur", this.close.bind(this));
 	}
 

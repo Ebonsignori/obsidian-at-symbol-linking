@@ -1,27 +1,27 @@
-import {
-	App,
-	Editor,
-	EditorPosition,
-	EditorSuggest,
-	EditorSuggestContext, EditorSuggestTriggerInfo,
-} from "obsidian";
 import { syntaxTree } from "@codemirror/language";
-import { AtSymbolLinkingSettings } from "src/settings/settings";
-import { fileOption } from "src/types";
-import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
-import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
+import {
+	type App,
+	type Editor,
+	type EditorPosition,
+	EditorSuggest,
+	type EditorSuggestContext,
+	type EditorSuggestTriggerInfo,
+} from "obsidian";
 import {
 	sharedGetMonoFileSuggestion,
 	sharedGetSuggestions,
 } from "src/shared-suggestion/sharedGetSuggestions";
+import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
+import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
+import type { FileOption } from "src/types";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
-import { removeAccents } from "src/utils/remove-accents";
+import type { CustomSuggester } from "../settings/interface";
 
 //@ts-ignore
 export default class SuggestionPopup extends EditorSuggest<
-	Fuzzysort.KeysResult<fileOption>
+	Fuzzysort.KeysResult<FileOption>
 > {
-	private readonly settings: AtSymbolLinkingSettings;
+	private readonly settings: CustomSuggester;
 	private typedChar: string;
 
 	private firstOpenedCursor: null | EditorPosition = null;
@@ -29,7 +29,7 @@ export default class SuggestionPopup extends EditorSuggest<
 	private app: App;
 	public name = "@ Symbol Linking Suggest";
 
-	constructor(app: App, settings: AtSymbolLinkingSettings) {
+	constructor(app: App, settings: CustomSuggester) {
 		super(app);
 		this.app = app;
 		this.settings = settings;
@@ -50,15 +50,13 @@ export default class SuggestionPopup extends EditorSuggest<
 		this.focused = false;
 	}
 
-	getSuggestions(
-		context: EditorSuggestContext
-	): Fuzzysort.KeysResult<fileOption>[] {
-		if (this.settings.limitToOneFileWithTrigger.length > 0)
+	getSuggestions(context: EditorSuggestContext): Fuzzysort.KeysResult<FileOption>[] {
+		if (this.settings.limitToFile.length > 0)
 			return sharedGetMonoFileSuggestion(
 				context.query,
 				this.settings,
 				this.app,
-				this.typedChar
+				this.typedChar,
 			);
 
 		const files = context.file.vault.getMarkdownFiles();
@@ -67,26 +65,19 @@ export default class SuggestionPopup extends EditorSuggest<
 			context.query,
 			this.settings,
 			this.app,
-			this.typedChar
+			this.typedChar,
 		);
 	}
 
-	onTrigger(
-		cursor: EditorPosition,
-		editor: Editor
-	): EditorSuggestTriggerInfo | null {
+	onTrigger(cursor: EditorPosition, editor: Editor): EditorSuggestTriggerInfo | null {
 		let query = "";
 		const typedChar = editor.getRange(
 			{ ...cursor, ch: cursor.ch - 1 },
-			{ ...cursor, ch: cursor.ch }
+			{ ...cursor, ch: cursor.ch },
 		);
-		
 
 		// When open and user enters newline or tab, close
-		if (
-			this.firstOpenedCursor &&
-			(typedChar === "\n" || typedChar === "\t")
-		) {
+		if (this.firstOpenedCursor && (typedChar === "\n" || typedChar === "\t")) {
 			return this.closeSuggestion();
 		}
 
@@ -102,10 +93,7 @@ export default class SuggestionPopup extends EditorSuggest<
 				from: cursor.from,
 				to: cursor.to,
 				enter(node) {
-					if (
-						node.type.name === "inline-code" ||
-						node.type.name?.includes("codeblock")
-					) {
+					if (node.type.name === "inline-code" || node.type.name?.includes("codeblock")) {
 						isInCodeBlock = true;
 					}
 				},
@@ -118,8 +106,10 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 
 		// Open suggestion when trigger is typed
-		const triggerFileSymbol = this.settings.limitToOneFileWithTrigger.map((file) => file.triggerSymbol);
-		const triggerFolderSymbol = this.settings.limitLinkDirectoriesWithTrigger.map((dir) => dir.triggerSymbol);
+		const triggerFileSymbol = this.settings.limitToFile.map((file) => file.triggerSymbol);
+		const triggerFolderSymbol = this.settings.limitToDirectories.map(
+			(dir) => dir.triggerSymbol,
+		);
 		if (
 			typedChar === this.settings.triggerSymbol ||
 			triggerFileSymbol.includes(typedChar) ||
@@ -133,7 +123,6 @@ export default class SuggestionPopup extends EditorSuggest<
 				query,
 			};
 		}
-		
 
 		// Don't continue evaluating if not opened
 		if (!this.firstOpenedCursor) {
@@ -147,8 +136,7 @@ export default class SuggestionPopup extends EditorSuggest<
 
 		// If query has more spaces alloted by the leavePopupOpenForXSpaces setting, close
 		if (
-			query.split(" ").length - 1 >
-				this.settings.leavePopupOpenForXSpaces ||
+			query.split(" ").length - 1 > this.settings.leavePopupOpenForXSpaces ||
 			// Also close if query starts with a space, regardless of space settings
 			query.startsWith(" ")
 		) {
@@ -159,44 +147,45 @@ export default class SuggestionPopup extends EditorSuggest<
 		if (!query || !isValidFileNameCharacter(typedChar, this.settings)) {
 			return this.closeSuggestion();
 		}
-		
+
 		return {
 			start: { ...cursor, ch: cursor.ch - 1 },
 			end: cursor,
-			query: this.settings.removeAccents ? removeAccents(query) : query,
+			query: this.settings.removeAccents ? query.removeAccents() : query,
 		};
 	}
-	
+
 	private allSymbol() {
-		const triggerFileSymbol = this.settings.limitToOneFileWithTrigger.map((file) => file.triggerSymbol) ?? [];
-		const triggerFolderSymbol = this.settings.limitToOneFileWithTrigger.map((file) => file.triggerSymbol) ?? [];
-		return [this.settings.triggerSymbol, ...triggerFileSymbol, ...triggerFolderSymbol].filter((x)=>x !== undefined);
+		const triggerFileSymbol =
+			this.settings.limitToFile.map((file) => file.triggerSymbol) ?? [];
+		const triggerFolderSymbol =
+			this.settings.limitToFile.map((file) => file.triggerSymbol) ?? [];
+		return [
+			this.settings.triggerSymbol,
+			...triggerFileSymbol,
+			...triggerFolderSymbol,
+		].filter((x) => x !== undefined);
 	}
 
-	renderSuggestion(
-		value: Fuzzysort.KeysResult<fileOption>,
-		el: HTMLElement
-	): void {
-		sharedRenderSuggestion(value, el, this.settings.limitToOneFileWithTrigger.length);
+	renderSuggestion(value: Fuzzysort.KeysResult<FileOption>, el: HTMLElement): void {
+		sharedRenderSuggestion(value, el, this.settings.limitToFile.length);
 	}
 
-	async selectSuggestion(
-		value: Fuzzysort.KeysResult<fileOption>
-	): Promise<void> {
+	async selectSuggestion(value: Fuzzysort.KeysResult<FileOption>): Promise<void> {
 		const line =
 			this.context?.editor.getRange(
 				{
 					line: this.context.start.line,
 					ch: 0,
 				},
-				this.context.end
+				this.context.end,
 			) || "";
 
 		const linkText = await sharedSelectSuggestion(
 			this.app,
 			this.settings,
 			this.typedChar,
-			value
+			value,
 		);
 		this.context?.editor.replaceRange(
 			linkText,
@@ -204,7 +193,7 @@ export default class SuggestionPopup extends EditorSuggest<
 				line: this.context.start.line,
 				ch: line.lastIndexOf(this.typedChar),
 			},
-			this.context.end
+			this.context.end,
 		);
 
 		// Close suggestion popup
@@ -214,10 +203,7 @@ export default class SuggestionPopup extends EditorSuggest<
 	selectNextItem(dir: SelectionDirection) {
 		if (!this.focused) {
 			this.focused = true;
-			dir =
-				dir === SelectionDirection.PREVIOUS
-					? dir
-					: SelectionDirection.NONE;
+			dir = dir === SelectionDirection.PREVIOUS ? dir : SelectionDirection.NONE;
 		}
 
 		const self = this as any;
@@ -225,7 +211,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		// view
 		self.suggestions.setSelectedItem(
 			self.suggestions.selectedItem + dir,
-			new KeyboardEvent("keydown")
+			new KeyboardEvent("keydown"),
 		);
 	}
 
@@ -235,7 +221,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		return null;
 	}
 
-	getSelectedItem(): Fuzzysort.KeysResult<fileOption> {
+	getSelectedItem(): Fuzzysort.KeysResult<FileOption> {
 		const self = this as any;
 		return self.suggestions.values[self.suggestions.selectedItem];
 	}

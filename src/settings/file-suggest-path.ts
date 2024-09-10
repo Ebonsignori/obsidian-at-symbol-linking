@@ -3,9 +3,7 @@ import fuzzysort from "fuzzysort";
 import { highlightSearch } from "../utils/highlight-search";
 import { TextInputSuggest } from "../utils/suggest";
 
-export class FileSuggestWithPath extends TextInputSuggest<
-	Fuzzysort.KeyResult<TFile>
-> {
+export class FileSuggestWithPath extends TextInputSuggest<Fuzzysort.KeyResult<TFile>> {
 	getSuggestions(inputStr: string): Fuzzysort.KeyResult<TFile>[] {
 		let abstractFiles = this.app.vault.getAllLoadedFiles();
 		const lowerCaseInputStr = inputStr.toLocaleLowerCase();

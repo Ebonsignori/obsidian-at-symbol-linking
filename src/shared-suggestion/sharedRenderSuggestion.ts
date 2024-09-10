@@ -1,9 +1,9 @@
 import { setIcon } from "obsidian";
-import { fileOption } from "src/types";
+import type { FileOption } from "src/types";
 import { highlightSearch } from "src/utils/highlight-search";
 
 export default function sharedRenderSuggestion(
-	value: Fuzzysort.KeysResult<fileOption>,
+	value: Fuzzysort.KeysResult<FileOption>,
 	el: HTMLElement,
 	limitToOneFile: number = 0,
 ): void {
@@ -28,7 +28,7 @@ export default function sharedRenderSuggestion(
 	}
 
 	context.appendChild(title);
-	if (limitToOneFile === 0 || limitToOneFile > 1){
+	if (limitToOneFile === 0 || limitToOneFile > 1) {
 		const path = el.doc.createElement("div");
 		path.addClass("suggestion-path");
 		let pathText = "";
@@ -43,8 +43,7 @@ export default function sharedRenderSuggestion(
 		path.addClass("suggestion-path");
 		path.setText("Create a new header");
 		context.appendChild(path);
-	} 
-	
+	}
 
 	const aux = el.doc.createElement("div");
 	aux.addClass("suggestion-aux");

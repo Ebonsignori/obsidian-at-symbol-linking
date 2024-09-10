@@ -2,7 +2,7 @@
 // Derived from https://github.com/farzher/fuzzysort/blob/c7f1d2674d7fa526015646bc02fd17e29662d30c/fuzzysort.js#L132
 export function highlightSearch<T>(
 	element: HTMLElement,
-	result: Fuzzysort.KeysResult<T>[0]
+	result: Fuzzysort.KeysResult<T>[0],
 ): void {
 	if (result === null) return;
 	let matchesIndex = 0;
@@ -11,9 +11,7 @@ export function highlightSearch<T>(
 	const targetLen = target.length;
 	// @ts-expect-error _indexes is private
 	let indexes = result._indexes;
-	indexes = indexes
-		.slice(0, indexes.len)
-		.sort((a: number, b: number) => a - b);
+	indexes = indexes.slice(0, indexes.len).sort((a: number, b: number) => a - b);
 	let strongElement = undefined;
 	for (let i = 0; i < targetLen; ++i) {
 		const char = target[i];
@@ -27,13 +25,9 @@ export function highlightSearch<T>(
 
 			// We are at end of matches
 			if (matchesIndex === indexes.length) {
-				(strongElement as HTMLElement).appendChild(
-					document.createTextNode(char)
-				);
+				(strongElement as HTMLElement).appendChild(document.createTextNode(char));
 				element.appendChild(strongElement as HTMLElement);
-				element.appendChild(
-					document.createTextNode(target.substr(i + 1))
-				);
+				element.appendChild(document.createTextNode(target.substr(i + 1)));
 				break;
 			}
 		} else {
