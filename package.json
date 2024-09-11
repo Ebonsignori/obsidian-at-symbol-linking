@@ -1,11 +1,8 @@
 {
 	"name": "at-symbol-linking",
-	"version": "1.8.1",
+	"version": "1.0.1",
 	"description": "",
 	"main": "main.js",
-	"engines": {
-		"node": ">=20"
-	},
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "node esbuild.config.mjs --production",
