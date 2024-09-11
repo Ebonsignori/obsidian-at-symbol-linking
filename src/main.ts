@@ -81,35 +81,34 @@ export default class AtSymbolLinking extends Plugin {
 			const oldSettings = JSON.parse(settings) as Partial<AtSymbolLinkingSettings>;
 			if (oldSettings) {
 				new Notice("Convertir the settings of @ symbol linking to custom suggester");
-				if (oldSettings) {
-					const directories = oldSettings?.limitLinkDirectories;
-					const files = oldSettings?.limitToOneFile;
-					const directoriesTrigger = oldSettings?.limitLinkDirectoriesWithTrigger;
-					delete oldSettings.limitToOneFile;
-					const filesTrigger = oldSettings?.limitToOneFileWithTrigger;
-					delete oldSettings.limitToOneFileWithTrigger;
-					delete oldSettings.limitLinkDirectories;
-					delete oldSettings.limitToOneFile;
-					console.log("oldSettings", directories && directories.length);
-					if (directories && directories.length > 0)
-						this.settings.limitToDirectories = directories.map((path) => ({
-							path,
-							triggerSymbol: oldSettings.triggerSymbol ?? "@",
-						}));
-					else if (directoriesTrigger && directoriesTrigger.length > 0) {
-						this.settings.limitToDirectories = directoriesTrigger;
-						delete oldSettings.limitLinkDirectoriesWithTrigger;
-					}
-					if (files && files.length > 0)
-						this.settings.limitToFile = files.map((path) => ({
-							path,
-							triggerSymbol: oldSettings.triggerSymbol ?? "@",
-						}));
-					else if (filesTrigger && filesTrigger.length > 0) {
-						this.settings.limitToFile = filesTrigger;
-						delete oldSettings.limitToOneFileWithTrigger;
-					}
+				const directories = oldSettings?.limitLinkDirectories;
+				const files = oldSettings?.limitToOneFile;
+				const directoriesTrigger = oldSettings?.limitLinkDirectoriesWithTrigger;
+				delete oldSettings.limitToOneFile;
+				const filesTrigger = oldSettings?.limitToOneFileWithTrigger;
+				delete oldSettings.limitToOneFileWithTrigger;
+				delete oldSettings.limitLinkDirectories;
+				delete oldSettings.limitToOneFile;
+				if (directories && directories.length > 0)
+					this.settings.limitToDirectories = directories.map((path) => ({
+						path,
+						triggerSymbol: oldSettings.triggerSymbol ?? "@",
+					}));
+				else if (directoriesTrigger && directoriesTrigger.length > 0) {
+					this.settings.limitToDirectories = directoriesTrigger;
+					delete oldSettings.limitLinkDirectoriesWithTrigger;
 				}
+				if (files && files.length > 0)
+					this.settings.limitToFile = files.map((path) => ({
+						path,
+						triggerSymbol: oldSettings.triggerSymbol ?? "@",
+					}));
+				else if (filesTrigger && filesTrigger.length > 0) {
+					this.settings.limitToFile = filesTrigger;
+					delete oldSettings.limitToOneFileWithTrigger;
+				}
+				//merge
+				this.settings = Object.assign(this.settings, oldSettings);
 			}
 		}
 		this.settings._converted = true;
@@ -131,7 +130,6 @@ export default class AtSymbolLinking extends Plugin {
 
 	async loadSettings() {
 		//convert old plugin if exists
-		const oldPlugin = this.app.plugins.plugins["at-symbol-linking"];
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 		await this.convertOldSettings();
 	}
