@@ -12,17 +12,17 @@ export function sharedGetSuggestions(
 	typedChar: string,
 ): Fuzzysort.KeysResult<FileOption>[] {
 	const options: FileOption[] = [];
-	const newFolderOfcreation = normalizePath(`${settings.addNewNoteDirectory.trim()}/`);
-	const allNewFolder: Set<string> = new Set();
+	const newNoteDirectory = normalizePath(`${settings.addNewNoteDirectory.trim()}/`);
+	const newNoteDirectories: Set<string> = new Set();
 	if (settings.addNewNoteDirectory.trim().length > 0)
-		allNewFolder.add(newFolderOfcreation);
+		newNoteDirectories.add(newNoteDirectory);
 	for (const file of files) {
 		// If there are folders to limit links to, check if the file is in one of them
 		if (settings.limitToDirectories.length > 0) {
 			let isAllowed = false;
 			for (const folder of settings.limitToDirectories) {
 				if (typedChar !== folder.triggerSymbol) continue;
-				allNewFolder.add(folder.path);
+				newNoteDirectories.add(folder.path);
 				if (file.parent?.path.startsWith(folder.path)) {
 					isAllowed = true;
 					break;
@@ -89,7 +89,7 @@ export function sharedGetSuggestions(
 			results = results.filter(
 				(result: Fuzzysort.KeysResult<FileOption>) => !result.obj?.isCreateNewOption,
 			);
-			for (const folder of allNewFolder) {
+			for (const folder of newNoteDirectories) {
 				results.push({
 					obj: {
 						isCreateNewOption: true,
