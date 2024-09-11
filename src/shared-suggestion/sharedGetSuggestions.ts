@@ -22,9 +22,9 @@ export function sharedGetSuggestions(
 			let isAllowed = false;
 			for (const folder of settings.limitToDirectories) {
 				if (typedChar !== folder.triggerSymbol) continue;
+				allNewFolder.add(folder.path);
 				if (file.parent?.path.startsWith(folder.path)) {
 					isAllowed = true;
-					allNewFolder.add(folder.path);
 					break;
 				}
 			}
