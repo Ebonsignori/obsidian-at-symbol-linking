@@ -1,3 +1,9 @@
+## [1.8.1](https://github.com/Mara-Li/obsidian-at-symbol-linking/compare/1.7.0...1.8.1) (2024-09-11)
+### Bug Fixes
+
+* "removeAccents()" doesn't exists ([24a7ac3](https://github.com/Mara-Li/obsidian-at-symbol-linking/commit/24a7ac35b5b6d04de7ac6c0010b95fd7839d1d28))
+* convertir old settings doesn't take account of some settings ([cddd67c](https://github.com/Mara-Li/obsidian-at-symbol-linking/commit/cddd67c84f5517ca6724a9ca7b0c00e9e4f512d9))
+
 ## [1.8.0](https://github.com/Mara-Li/obsidian-at-symbol-linking/compare/1.6.2...1.8.0) (2024-09-10)
 ### Features
 
