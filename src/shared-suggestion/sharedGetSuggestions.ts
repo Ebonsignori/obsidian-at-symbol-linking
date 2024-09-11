@@ -2,6 +2,7 @@ import fuzzysort from "fuzzysort";
 import { type App, TFile, normalizePath } from "obsidian";
 import type { FileOption } from "src/types";
 import type { CustomSuggester } from "../settings/interface";
+import { removeAccents } from "../utils/valid-file-name";
 
 export function sharedGetSuggestions(
 	files: TFile[],
@@ -33,7 +34,7 @@ export function sharedGetSuggestions(
 		}
 		const meta = app.metadataCache.getFileCache(file);
 		const fileName = settings.removeAccents
-			? file.basename.removeAccents()
+			? removeAccents(file.basename)
 			: file.basename;
 		if (meta?.frontmatter?.alias) {
 			options.push({
@@ -50,7 +51,7 @@ export function sharedGetSuggestions(
 				options.push({
 					fileName,
 					filePath: file.path,
-					alias: settings.removeAccents ? alias.removeAccents() : alias,
+					alias: settings.removeAccents ? removeAccents(alias) : alias,
 				});
 			}
 		}
@@ -79,7 +80,6 @@ export function sharedGetSuggestions(
 
 	// If showAddNewNote option is enabled, show it as the last option
 	if (settings.showAddNewNote && query) {
-		console.log(newFolderOfcreation);
 		// Don't show if it has the same filename as an existing note
 		const hasExistingNote = results.some(
 			(result: Fuzzysort.KeysResult<FileOption>) =>

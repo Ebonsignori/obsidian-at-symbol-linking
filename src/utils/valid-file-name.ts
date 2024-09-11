@@ -12,3 +12,7 @@ export const isValidFileNameCharacter = (char: string, settings: CustomSuggester
 		settings.invalidCharacterRegexFlags,
 	).test(char);
 };
+
+export const removeAccents = (str: string) => {
+	return str.normalize("NFD").replace(/\p{Diacritic}/gu, "");
+};

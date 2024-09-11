@@ -14,7 +14,7 @@ import {
 import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
 import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
 import type { FileOption } from "src/types";
-import { isValidFileNameCharacter } from "src/utils/valid-file-name";
+import { isValidFileNameCharacter, removeAccents } from "src/utils/valid-file-name";
 import type { CustomSuggester } from "../settings/interface";
 
 //@ts-ignore
@@ -151,7 +151,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		return {
 			start: { ...cursor, ch: cursor.ch - 1 },
 			end: cursor,
-			query: this.settings.removeAccents ? query.removeAccents() : query,
+			query: this.settings.removeAccents ? removeAccents(query) : query,
 		};
 	}
 

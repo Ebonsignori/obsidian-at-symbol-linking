@@ -2,7 +2,7 @@ import { syntaxTree } from "@codemirror/language";
 import { ViewPlugin } from "@codemirror/view";
 import type { EditorView, PluginValue, Rect } from "@codemirror/view";
 import { type App, type EditorPosition, Platform } from "obsidian";
-import { isValidFileNameCharacter } from "src/utils/valid-file-name";
+import { isValidFileNameCharacter, removeAccents } from "src/utils/valid-file-name";
 import type { CustomSuggester } from "../settings/interface";
 import { LinkSuggest } from "./extension-popup";
 
@@ -143,9 +143,7 @@ export function atSymbolTriggerExtension(app: App, settings: CustomSuggester) {
 					return this.closeSuggestion();
 				}
 
-				if (settings.removeAccents) {
-					this.openQuery = this.openQuery.removeAccents();
-				}
+				if (settings.removeAccents) this.openQuery = removeAccents(this.openQuery);
 
 				if (!this.suggestionEl && this.firstOpenedCursor && this.view) {
 					const container = (<any>app).dom.appContainerEl as HTMLElement;
