@@ -43,4 +43,4 @@ The implementation borrows from:
 
 - [suggest.ts](./src/utils/suggest.ts), [file-suggest.ts](./src/settings/file-suggest.ts), [folder-suggest.ts](./src/settings/folder-suggest.ts), and [extension-popup.ts](./src/extension-version/extension-popup.ts) are derived from copyrighted works by [Liam Cain](https://github.com/liamcain), [obsidian-periodic-notes](https://github.com/liamcain/obsidian-periodic-notes).
 - [obsidian-completr](https://github.com/tth05/obsidian-completr): For suggestion popup hotkey handling
-- [@ symbol linking](https://github.com/Ebonsignori/obsidian-at-symbol-linking: Original plugin
+- [@ symbol linking](https://github.com/Ebonsignori/obsidian-at-symbol-linking): Original plugin
