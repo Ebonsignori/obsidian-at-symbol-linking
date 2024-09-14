@@ -23,10 +23,11 @@ export default class SuggestionPopup extends EditorSuggest<
 > {
 	private readonly settings: CustomSuggester;
 	private typedChar: string;
+	private originalQuery: string;
 
 	private firstOpenedCursor: null | EditorPosition = null;
 	private focused = false;
-	private app: App;
+	private readonly app: App;
 	public name = "@ Symbol Linking Suggest";
 
 	constructor(app: App, settings: CustomSuggester) {
@@ -57,6 +58,7 @@ export default class SuggestionPopup extends EditorSuggest<
 				this.settings,
 				this.app,
 				this.typedChar,
+				this.originalQuery,
 			);
 
 		const files = context.file.vault.getMarkdownFiles();
@@ -66,6 +68,7 @@ export default class SuggestionPopup extends EditorSuggest<
 			this.settings,
 			this.app,
 			this.typedChar,
+			this.originalQuery,
 		);
 	}
 
@@ -117,10 +120,11 @@ export default class SuggestionPopup extends EditorSuggest<
 		) {
 			this.typedChar = typedChar;
 			this.firstOpenedCursor = cursor;
+			this.originalQuery = query;
 			return {
 				start: { ...cursor, ch: cursor.ch - 1 },
 				end: cursor,
-				query,
+				query: this.settings.removeAccents ? removeAccents(query) : query,
 			};
 		}
 
@@ -147,24 +151,12 @@ export default class SuggestionPopup extends EditorSuggest<
 		if (!query || !isValidFileNameCharacter(typedChar, this.settings)) {
 			return this.closeSuggestion();
 		}
-
+		this.originalQuery = query;
 		return {
 			start: { ...cursor, ch: cursor.ch - 1 },
 			end: cursor,
 			query: this.settings.removeAccents ? removeAccents(query) : query,
 		};
-	}
-
-	private allSymbol() {
-		const triggerFileSymbol =
-			this.settings.limitToFile.map((file) => file.triggerSymbol) ?? [];
-		const triggerFolderSymbol =
-			this.settings.limitToFile.map((file) => file.triggerSymbol) ?? [];
-		return [
-			this.settings.triggerSymbol,
-			...triggerFileSymbol,
-			...triggerFolderSymbol,
-		].filter((x) => x !== undefined);
 	}
 
 	renderSuggestion(value: Fuzzysort.KeysResult<FileOption>, el: HTMLElement): void {
@@ -185,6 +177,7 @@ export default class SuggestionPopup extends EditorSuggest<
 			this.app,
 			this.settings,
 			this.typedChar,
+			this.originalQuery,
 			value,
 		);
 		this.context?.editor.replaceRange(

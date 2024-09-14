@@ -8,6 +8,7 @@ export async function sharedSelectSuggestion(
 	app: App,
 	settings: CustomSuggester,
 	typedChar: string,
+	originalQuery: string,
 	value: Fuzzysort.KeysResult<FileOption>,
 ): Promise<string> {
 	// When user selects "Create new note" option, create the note to link to
@@ -25,8 +26,8 @@ export async function sharedSelectSuggestion(
 			const headerLevel = "#".repeat(
 				settings.headerLevelForContact <= 1 ? 1 : settings.headerLevelForContact,
 			);
-			const newContent = `${headerLevel} ${value.obj?.query}\n`;
-			app.vault.process(file, (content) => {
+			const newContent = `${headerLevel} ${originalQuery}\n`;
+			await app.vault.process(file, (content) => {
 				if (content.endsWith("\n")) {
 					return `${content}${newContent}`;
 				}
@@ -50,7 +51,7 @@ export async function sharedSelectSuggestion(
 			try {
 				linkFile = await app.vault.create(value.obj?.filePath, newNoteContents);
 				// Update the alias to the name for displaying the @ link
-				value.obj.alias = value.obj?.query;
+				value.obj.alias = originalQuery;
 			} catch (error) {
 				new Notice(
 					`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
@@ -68,7 +69,7 @@ export async function sharedSelectSuggestion(
 	let alias = value.obj?.alias || "";
 	const aliasFallBack =
 		settings.limitToFile.length > 0
-			? value.obj?.query ?? value.obj?.fileName
+			? originalQuery ?? value.obj?.fileName
 			: value.obj?.fileName;
 	if (settings.includeSymbol) alias = `${typedChar}${alias || aliasFallBack}`;
 	const linkText =
@@ -76,7 +77,7 @@ export async function sharedSelectSuggestion(
 			? app.fileManager.generateMarkdownLink(
 					linkFile,
 					currentFile?.path || "",
-					`#${value.obj?.query || value.obj?.fileName}`,
+					`#${originalQuery || value.obj?.fileName}`,
 					alias,
 				)
 			: app.fileManager.generateMarkdownLink(

@@ -10,6 +10,7 @@ export function sharedGetSuggestions(
 	settings: CustomSuggester,
 	app: App,
 	typedChar: string,
+	originalQuery: string,
 ): Fuzzysort.KeysResult<FileOption>[] {
 	const options: FileOption[] = [];
 	const newNoteDirectory = normalizePath(`${settings.addNewNoteDirectory.trim()}/`);
@@ -94,8 +95,8 @@ export function sharedGetSuggestions(
 					obj: {
 						isCreateNewOption: true,
 						query,
-						fileName: query,
-						filePath: normalizePath(`${folder}/${query.trim()}.md`),
+						fileName: originalQuery,
+						filePath: normalizePath(`${folder}/${originalQuery.trim()}.md`),
 					},
 				});
 			}
@@ -110,6 +111,7 @@ export function sharedGetMonoFileSuggestion(
 	settings: CustomSuggester,
 	app: App,
 	typedChar: string,
+	originalQuery: string,
 ): Fuzzysort.KeysResult<FileOption>[] {
 	if (settings.limitToFile.length === 0) return [];
 	const files: TFile[] = settings.limitToFile
@@ -164,7 +166,7 @@ export function sharedGetMonoFileSuggestion(
 					obj: {
 						isCreateNewOption: true,
 						query,
-						fileName: query,
+						fileName: originalQuery,
 						filePath: file.path,
 					},
 				});

@@ -106,18 +106,20 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 	protected app: App;
 	protected inputEl: HTMLDivElement;
 	protected settings: CustomSuggester;
-	private triggerSymbol: string;
+	private readonly triggerSymbol: string;
+	private readonly originalQuery: string;
 	private popper: PopperInstance;
-	private scope: Scope;
-	private suggestEl: HTMLElement;
+	private readonly scope: Scope;
+	private readonly suggestEl: HTMLElement;
 	private suggest: Suggest<Fuzzysort.KeysResult<FileOption>>;
-	private onSelect: (linkText: string) => void;
+	private readonly onSelect: (linkText: string) => void;
 
 	constructor(
 		app: App,
 		inputEl: HTMLDivElement,
 		settings: CustomSuggester,
 		triggerSymbol: string,
+		orginalQuery: string,
 		onSelect: (linkText: string) => void,
 	) {
 		this.app = app;
@@ -126,6 +128,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 		this.scope = new Scope();
 		this.onSelect = onSelect;
 		this.triggerSymbol = triggerSymbol;
+		this.originalQuery = orginalQuery;
 
 		this.suggestEl = createDiv("suggestion-container");
 		if (Platform.isMobile) {
@@ -214,6 +217,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 				this.settings,
 				this.app,
 				this.triggerSymbol,
+				this.originalQuery,
 			);
 		} else {
 			const files = this.app.vault.getMarkdownFiles();
@@ -223,6 +227,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 				this.settings,
 				this.app,
 				this.triggerSymbol,
+				this.originalQuery,
 			);
 		}
 	}
@@ -236,6 +241,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 			this.app,
 			this.settings,
 			this.triggerSymbol,
+			this.originalQuery,
 			value,
 		);
 
