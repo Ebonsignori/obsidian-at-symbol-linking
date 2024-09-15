@@ -2,7 +2,7 @@ import { syntaxTree } from "@codemirror/language";
 import { ViewPlugin } from "@codemirror/view";
 import type { EditorView, PluginValue, Rect } from "@codemirror/view";
 import { type App, type EditorPosition, Platform } from "obsidian";
-import { isValidFileNameCharacter, removeAccents } from "src/utils/valid-file-name";
+import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 import type { CustomSuggester } from "../settings/interface";
 import { LinkSuggest } from "./extension-popup";
 
@@ -15,7 +15,6 @@ export function atSymbolTriggerExtension(app: App, settings: CustomSuggester) {
 			private readonly view: EditorView;
 			private firstOpenedCursor: EditorPosition | null = null;
 			private openQuery = "";
-			private originalQuery = "";
 			private isOpen = false;
 			private suggestionEl: HTMLDivElement | null = null;
 			private suggestionPopup: LinkSuggest | null = null;
@@ -143,8 +142,7 @@ export function atSymbolTriggerExtension(app: App, settings: CustomSuggester) {
 				) {
 					return this.closeSuggestion();
 				}
-				this.originalQuery = this.openQuery;
-				if (settings.removeAccents) this.openQuery = removeAccents(this.openQuery);
+				//if (settings.removeAccents) this.openQuery = removeAccents(this.openQuery);
 
 				if (!this.suggestionEl && this.firstOpenedCursor && this.view) {
 					const container = (<any>app).dom.appContainerEl as HTMLElement;
@@ -171,15 +169,12 @@ export function atSymbolTriggerExtension(app: App, settings: CustomSuggester) {
 						this.suggestionEl.style.bottom = "var(--mobile-toolbar-height)";
 						this.suggestionEl.style.left = "0px";
 					}
-
 					container.appendChild(this.suggestionEl);
-
 					this.suggestionPopup = new LinkSuggest(
 						app,
 						this.suggestionEl,
 						settings,
 						typedChar,
-						this.originalQuery,
 						this.onSelect.bind(this),
 					);
 					this.suggestionPopup.onInputChanged(this.openQuery);

@@ -10,6 +10,7 @@ import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion
 import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
 import type { FileOption } from "src/types";
 import type { CustomSuggester } from "../settings/interface";
+import { removeAccents } from "../utils/valid-file-name";
 
 export class Suggest<T> {
 	private owner: IOwner<T>;
@@ -107,19 +108,18 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 	protected inputEl: HTMLDivElement;
 	protected settings: CustomSuggester;
 	private readonly triggerSymbol: string;
-	private readonly originalQuery: string;
 	private popper: PopperInstance;
 	private readonly scope: Scope;
 	private readonly suggestEl: HTMLElement;
 	private suggest: Suggest<Fuzzysort.KeysResult<FileOption>>;
 	private readonly onSelect: (linkText: string) => void;
+	private originalQuery: string;
 
 	constructor(
 		app: App,
 		inputEl: HTMLDivElement,
 		settings: CustomSuggester,
 		triggerSymbol: string,
-		orginalQuery: string,
 		onSelect: (linkText: string) => void,
 	) {
 		this.app = app;
@@ -128,7 +128,6 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 		this.scope = new Scope();
 		this.onSelect = onSelect;
 		this.triggerSymbol = triggerSymbol;
-		this.originalQuery = orginalQuery;
 
 		this.suggestEl = createDiv("suggestion-container");
 		if (Platform.isMobile) {
@@ -211,6 +210,8 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 	}
 
 	getSuggestions(query: string): Fuzzysort.KeysResult<FileOption>[] {
+		this.originalQuery = query;
+		query = removeAccents(query);
 		if (this.settings.limitToFile.length > 0) {
 			return sharedGetMonoFileSuggestion(
 				query,
@@ -244,7 +245,6 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 			this.originalQuery,
 			value,
 		);
-
 		this.onSelect(linkText);
 	}
 }
