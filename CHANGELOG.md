@@ -1,3 +1,8 @@
+## [1.1.1](https://github.com/Mara-Li/obsidian-at-symbol-linking/compare/1.1.0...1.1.1) (2024-09-15)
+### Bug Fixes
+
+* compatibility mode with removeAccents broken ([35c480f](https://github.com/Mara-Li/obsidian-at-symbol-linking/commit/35c480fe680232fc2b27af23678f0834bf0cde0a))
+
 ## [1.1.0](https://github.com/Mara-Li/obsidian-at-symbol-linking/compare/1.0.2...1.1.0) (2024-09-14)
 ### Features
 
