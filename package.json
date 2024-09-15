@@ -11,7 +11,9 @@
 		"lint": "pnpm biome format --write src/",
 		"prebuild": "tsc",
 		"prebuild:prod": "tsc",
-		"bump": "node commit-and-tag-version.mjs"
+		"prebump": "tsc",
+		"bump": "node commit-and-tag-version.mjs",
+		"postbump": "git push --follow-tags origin main"
 	},
 	"commit-and-tag-version": {
 		"t": ""
