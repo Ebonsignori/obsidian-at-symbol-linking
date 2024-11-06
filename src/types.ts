@@ -4,4 +4,5 @@ export type FileOption = {
 	fileName: string;
 	filePath: string;
 	alias?: string;
+	originalAlias?: string;
 };
