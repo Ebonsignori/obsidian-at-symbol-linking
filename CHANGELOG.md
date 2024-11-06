@@ -1,3 +1,14 @@
+## [1.2.0](https://github.com/Mara-Li/obsidian-custom-suggester/compare/1.0.2...1.2.0) (2024-11-06)
+### Features
+
+* create the file respecting the accents, event with removeAccents ([35b6252](https://github.com/Mara-Li/obsidian-custom-suggester/commit/35b62523d0086ca056d6c37a3c640a86faa5daf8))
+* **removeAccents:** add accents in the pop-up when removeAccents=true ([e2863e4](https://github.com/Mara-Li/obsidian-custom-suggester/commit/e2863e474fb7911a14b94e72ba83a8db8eafdf72))
+
+### Bug Fixes
+
+* **alias:** "removeAccents()" on alias when created ⇒ should keep accent in rendered link ([a9ee289](https://github.com/Mara-Li/obsidian-custom-suggester/commit/a9ee2895b5320d87233e3e141bbd926da03ccdca))
+* compatibility mode with removeAccents broken ([35c480f](https://github.com/Mara-Li/obsidian-custom-suggester/commit/35c480fe680232fc2b27af23678f0834bf0cde0a))
+
 ## [1.3.0](https://github.com/Mara-Li/obsidian-custom-suggester/compare/1.0.2...1.3.0) (2024-11-06)
 ### Features
 
