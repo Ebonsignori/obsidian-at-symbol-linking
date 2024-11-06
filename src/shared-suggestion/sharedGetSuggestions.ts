@@ -41,7 +41,9 @@ export function sharedGetSuggestions(
 			options.push({
 				fileName,
 				filePath: file.path,
-				alias: settings.removeAccents ? removeAccents(meta.frontmatter.alias) : meta.frontmatter.alias,
+				alias: settings.removeAccents
+					? removeAccents(meta.frontmatter.alias)
+					: meta.frontmatter.alias,
 				originalAlias: settings.removeAccents ? meta.frontmatter.alias : undefined,
 			});
 		} else if (meta?.frontmatter?.aliases) {

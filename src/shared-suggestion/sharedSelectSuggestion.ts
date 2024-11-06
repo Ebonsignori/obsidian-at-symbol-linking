@@ -69,7 +69,7 @@ export async function sharedSelectSuggestion(
 	let alias = value.obj?.originalAlias || "";
 	const aliasFallBack =
 		settings.limitToFile.length > 0
-			? originalQuery ?? value.obj?.fileName
+			? (originalQuery ?? value.obj?.fileName)
 			: value.obj?.fileName;
 	if (settings.includeSymbol) alias = `${typedChar}${alias || aliasFallBack}`;
 	const linkText =
