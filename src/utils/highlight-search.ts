@@ -1,13 +1,26 @@
 // Highlights the search result and adds it to the element
 // Derived from https://github.com/farzher/fuzzysort/blob/c7f1d2674d7fa526015646bc02fd17e29662d30c/fuzzysort.js#L132
+import type {FileOption} from "../types";
+import {removeAccents} from "./valid-file-name";
+
 export function highlightSearch<T>(
 	element: HTMLElement,
 	result: Fuzzysort.KeysResult<T>[0],
+	file?: FileOption,
+	uniformize?: boolean
 ): void {
 	if (result === null) return;
 	let matchesIndex = 0;
 	let opened = false;
-	const target = result.target;
+	let target = result.target;
+	console.log("target", target, file);
+	if (file && uniformize) {
+		//search the target in the file in alias and fileName
+		const alias = file.alias;
+		const fileName = file.fileName;
+		if (alias === target) target = file.originalAlias ?? alias;
+		else if (removeAccents(fileName) === target) target = file.filePath.split("/").pop()?.replace(".md", "") ?? fileName;
+	}
 	const targetLen = target.length;
 	// @ts-expect-error _indexes is private
 	let indexes = result._indexes;
@@ -27,7 +40,7 @@ export function highlightSearch<T>(
 			if (matchesIndex === indexes.length) {
 				(strongElement as HTMLElement).appendChild(document.createTextNode(char));
 				element.appendChild(strongElement as HTMLElement);
-				element.appendChild(document.createTextNode(target.substr(i + 1)));
+				element.appendChild(document.createTextNode(target.substring(i + 1)));
 				break;
 			}
 		} else {

@@ -234,7 +234,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<FileOption>> {
 	}
 
 	renderSuggestion(value: Fuzzysort.KeysResult<FileOption>, el: HTMLElement): void {
-		sharedRenderSuggestion(value, el, this.settings.limitToFile.length);
+		sharedRenderSuggestion(value, el, this.settings.limitToFile.length, this.settings.removeAccents);
 	}
 
 	async selectSuggestion(value: Fuzzysort.KeysResult<FileOption>): Promise<void> {

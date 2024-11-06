@@ -6,6 +6,7 @@ export default function sharedRenderSuggestion(
 	value: Fuzzysort.KeysResult<FileOption>,
 	el: HTMLElement,
 	limitToOneFile: number = 0,
+	uniformize?: boolean,
 ): void {
 	el.addClass("at-symbol-linking-suggestion");
 	const context = el.doc.createElement("div");
@@ -16,11 +17,13 @@ export default function sharedRenderSuggestion(
 	const title = el.doc.createElement("div");
 	title.addClass("suggestion-title");
 	if (value[0]) {
-		highlightSearch(title, value[0]);
+		highlightSearch(title, value[0], value.obj, uniformize);
+	} else if (value.obj?.originalAlias) {
+		title.setText(value.obj?.originalAlias);
 	} else if (value.obj?.alias) {
 		title.setText(value.obj?.alias);
 	} else if (value[1]) {
-		highlightSearch(title, value[1]);
+		highlightSearch(title, value[1], value.obj, uniformize);
 	} else if (value.obj?.fileName) {
 		title.setText(value.obj?.fileName);
 	} else {
