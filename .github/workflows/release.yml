@@ -25,7 +25,7 @@ jobs:
     uses: mara-li/reusable-workflows/.github/workflows/obsidian-plugin-release.yaml@main
     with:
       PLUGIN_NAME: symbol-linking
-      CACHE: "pnpm"
+      CACHE: "bun"
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,6 +35,6 @@ jobs:
     with:
       PLUGIN_NAME: symbol-linking
       BETA: ${{ inputs.beta }}
-      CACHE: "pnpm"
+      CACHE: "bun"
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
