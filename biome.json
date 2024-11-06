@@ -21,6 +21,7 @@
 					"level": "warn",
 					"options": {
 						"strictCase": false,
+						"enumMemberCase": "CONSTANT_CASE",
 						"conventions": [
 							{
 								"selector": {
