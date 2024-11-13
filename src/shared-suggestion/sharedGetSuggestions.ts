@@ -24,6 +24,15 @@ export function sharedGetSuggestions(
 				continue;
 			}
 		}
+
+		// Include fileName without alias as well
+		options.push({
+			fileName: settings.removeAccents
+				? removeAccents(file.basename)
+				: file.basename,
+			filePath: file.path,
+		});
+
 		const meta = app.metadataCache.getFileCache(file);
 		if (meta?.frontmatter?.alias) {
 			options.push({
@@ -52,13 +61,6 @@ export function sharedGetSuggestions(
 				});
 			}
 		}
-		// Include fileName without alias as well
-		options.push({
-			fileName: settings.removeAccents
-				? removeAccents(file.basename)
-				: file.basename,
-			filePath: file.path,
-		});
 	}
 
 	// Show all files when no query
