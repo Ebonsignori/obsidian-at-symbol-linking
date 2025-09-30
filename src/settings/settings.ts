@@ -20,6 +20,7 @@ export interface AtSymbolLinkingSettings {
 
 	useCompatibilityMode: boolean;
 	leavePopupOpenForXSpaces: number;
+	allowedCodeBlockTypes: Array<string>;
 
 	invalidCharacterRegex: string;
 	invalidCharacterRegexFlags: string;
@@ -38,6 +39,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 
 	useCompatibilityMode: false,
 	leavePopupOpenForXSpaces: 0,
+	allowedCodeBlockTypes: [],
 
 	// eslint-disable-next-line no-useless-escape
 	invalidCharacterRegex: `[\[\]^|#]`,
@@ -357,6 +359,89 @@ export class SettingsTab extends PluginSettingTab {
 				};
 			});
 		// End leavePopupOpenForXSpaces option
+
+		// Begin allowedCodeBlockTypes option
+		const allowedCodeBlockTypesDesc = document.createDocumentFragment();
+		allowedCodeBlockTypesDesc.append(
+			`By default, ${this.plugin.settings.triggerSymbol} linking is disabled inside code blocks.`,
+			allowedCodeBlockTypesDesc.createEl("br"),
+			"Add code block types here to allow linking within those specific code blocks.",
+			allowedCodeBlockTypesDesc.createEl("br"),
+			allowedCodeBlockTypesDesc.createEl("em", {
+				text: "Example: 'ad-note' will allow linking inside ```ad-note code blocks.",
+			})
+		);
+
+		new Setting(this.containerEl)
+			.setName("Allowed code block types")
+			.setDesc(allowedCodeBlockTypesDesc)
+			.addButton((button: ButtonComponent): ButtonComponent => {
+				return button
+					.setTooltip("Add code block type")
+					.setButtonText("+")
+					.setCta()
+					.onClick(async () => {
+						this.plugin.settings.allowedCodeBlockTypes.push("");
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+
+		// Create individual settings for each code block type
+		this.plugin.settings.allowedCodeBlockTypes.forEach((type, index) => {
+			new Setting(this.containerEl)
+				.setName(`Code block type ${index + 1}`)
+				.addText((text) => {
+					text.setPlaceholder("ad-note")
+						.setValue(type)
+						.onChange(async (value) => {
+							this.plugin.settings.allowedCodeBlockTypes[index] = value;
+							await this.plugin.saveSettings();
+						});
+				})
+				.addExtraButton((button) => {
+					button
+						.setIcon("up-chevron-glyph")
+						.setTooltip("Move up")
+						.onClick(async () => {
+							arrayMove(
+								this.plugin.settings.allowedCodeBlockTypes,
+								index,
+								index - 1
+							);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				})
+				.addExtraButton((button) => {
+					button
+						.setIcon("down-chevron-glyph")
+						.setTooltip("Move down")
+						.onClick(async () => {
+							arrayMove(
+								this.plugin.settings.allowedCodeBlockTypes,
+								index,
+								index + 1
+							);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				})
+				.addExtraButton((button) => {
+					button
+						.setIcon("cross")
+						.setTooltip("Delete")
+						.onClick(async () => {
+							this.plugin.settings.allowedCodeBlockTypes.splice(
+								index,
+								1
+							);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				});
+		});
+		// End allowedCodeBlockTypes option
 
 		new Setting(this.containerEl).setName("Advanced settings").setHeading();
 

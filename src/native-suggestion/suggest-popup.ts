@@ -6,13 +6,13 @@ import {
 	EditorSuggestContext,
 	EditorSuggestTriggerInfo,
 } from "obsidian";
-import { syntaxTree } from "@codemirror/language";
 import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { fileOption } from "src/types";
 import { sharedSelectSuggestion } from "src/shared-suggestion/sharedSelectSuggestion";
 import sharedRenderSuggestion from "src/shared-suggestion/sharedRenderSuggestion";
 import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
+import { isInDisallowedCodeBlock } from "src/utils/allowed-code-block-check";
 import { removeAccents } from "src/utils/remove-accents";
 
 export default class SuggestionPopup extends EditorSuggest<
@@ -70,30 +70,15 @@ export default class SuggestionPopup extends EditorSuggest<
 			return this.closeSuggestion();
 		}
 
-		// If user's cursor is inside a code block, don't attempt to link
-		let isInCodeBlock = false;
-		if ((editor as any)?.cm) {
-			const cm = (editor as any).cm;
-			const cursor = cm.state?.selection?.main as {
-				from: number;
-				to: number;
-			};
-			syntaxTree(cm.state).iterate({
-				from: cursor.from,
-				to: cursor.to,
-				enter(node) {
-					if (
-						node.type.name === "inline-code" ||
-						node.type.name?.includes("codeblock")
-					) {
-						isInCodeBlock = true;
-					}
-				},
-			});
-		}
+		// Check if user's cursor is inside a disallowed code block
+		const isInDisallowedCodeBlockResult = isInDisallowedCodeBlock(
+			editor,
+			this.settings,
+			!!this.firstOpenedCursor
+		);
 
-		// If already open, allow backticks to be part of file name
-		if (isInCodeBlock && !this.firstOpenedCursor) {
+		// If in disallowed code block and popup isn't already open, don't trigger
+		if (isInDisallowedCodeBlockResult && !this.firstOpenedCursor) {
 			return null;
 		}
 

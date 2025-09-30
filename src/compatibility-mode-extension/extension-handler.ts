@@ -6,6 +6,7 @@ import { AtSymbolLinkingSettings } from "src/settings/settings";
 import { LinkSuggest } from "./extension-popup";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 import { removeAccents } from "src/utils/remove-accents";
+import { isAllowedCodeBlockType } from "src/utils/allowed-code-block-check";
 
 // Max parents we will iterate through to determine if a click event is outside the suggestion popup
 const maxParentDepth = 5;
@@ -85,18 +86,27 @@ export function atSymbolTriggerExtension(
 				syntaxTree((<any>this.view)?.viewState?.state).iterate({
 					from: cursor.from,
 					to: cursor.to,
-					enter(node) {
+					enter: (node) => {
 						// When node.type name is:
 						// hmd-frontmatter - Cursor is in Title (don't open)
 						// inline-code - Cursor is in code block (don't open)
-						// .includes("codeblock") - Cursor is in multiline code block (don't open)
+						// .includes("codeblock") - Cursor is in multiline code block (check if allowed)
 						// Otherwise, open
-						if (
-							node.type.name === "hmd-frontmatter" ||
-							node.type.name === "inline-code" ||
-							node.type.name?.includes("codeblock")
-						) {
+						if (node.type.name === "hmd-frontmatter") {
 							isInValidContext = false;
+						} else if (node.type.name === "inline-code") {
+							// Inline code is always disallowed
+							isInValidContext = false;
+						} else if (node.type.name?.includes("codeblock")) {
+							// For code blocks, check if the type is in the allowed list
+							const isAllowedType = isAllowedCodeBlockType(
+								(<any>this.view)?.viewState?.state,
+								node,
+								settings
+							);
+							if (!isAllowedType) {
+								isInValidContext = false;
+							}
 						}
 					},
 				});
