@@ -9,10 +9,15 @@ import AtSymbolLinking from "src/main";
 import { FolderSuggest } from "./folder-suggest";
 import { FileSuggest } from "./file-suggest";
 
+export interface FolderSymbolMapping {
+	folder: string;
+	symbol?: string;
+}
+
 export interface AtSymbolLinkingSettings {
-	triggerSymbol: string;
+	globalTriggerSymbol: string;
 	includeSymbol: boolean;
-	limitLinkDirectories: Array<string>;
+	limitLinkDirectories: Array<FolderSymbolMapping>;
 
 	showAddNewNote: boolean;
 	addNewNoteTemplateFile: string;
@@ -29,7 +34,7 @@ export interface AtSymbolLinkingSettings {
 }
 
 export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
-	triggerSymbol: "@",
+	globalTriggerSymbol: "@",
 	limitLinkDirectories: [],
 	includeSymbol: true,
 
@@ -42,7 +47,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	allowedCodeBlockTypes: [],
 
 	// eslint-disable-next-line no-useless-escape
-	invalidCharacterRegex: `[\[\]^|#]`,
+	invalidCharacterRegex: `[\\[\\]^|#]`,
 	invalidCharacterRegexFlags: "i",
 
 	removeAccents: true,
@@ -76,17 +81,19 @@ export class SettingsTab extends PluginSettingTab {
 	display(): void {
 		this.containerEl.empty();
 
-		// Begin triggerSymbol option: Determine which symbol triggers the popup
-		const triggerSymbolDesc = document.createDocumentFragment();
-		triggerSymbolDesc.append("Type this symbol to trigger the popup.");
+		// Begin globalTriggerSymbol option: Determine which symbol triggers the popup
+		const globalTriggerSymbolDesc = document.createDocumentFragment();
+		globalTriggerSymbolDesc.append(
+			"Type this symbol to trigger the popup."
+		);
 		new Setting(this.containerEl)
-			.setName("Trigger Symbol")
-			.setDesc(triggerSymbolDesc)
+			.setName("Global Trigger Symbol")
+			.setDesc(globalTriggerSymbolDesc)
 			.addText((text) => {
 				text.setPlaceholder("@")
-					.setValue(this.plugin.settings.triggerSymbol)
+					.setValue(this.plugin.settings.globalTriggerSymbol)
 					.onChange((value: string) => {
-						this.plugin.settings.triggerSymbol = value;
+						this.plugin.settings.globalTriggerSymbol = value;
 						this.plugin.saveSettings();
 					});
 				text.inputEl.onblur = () => {
@@ -95,21 +102,21 @@ export class SettingsTab extends PluginSettingTab {
 				};
 			});
 
-		// Begin includeSymbol option: Determine whether to include @ symbol in link
+		// Begin includeSymbol option: Determine whether to include the linking symbol in link
 		const includeSymbolDesc = document.createDocumentFragment();
 		includeSymbolDesc.append(
-			`Include the ${this.plugin.settings.triggerSymbol} symbol prefixing the final link text`,
+			`Include the linking symbol in the final link text`,
 			includeSymbolDesc.createEl("br"),
 			includeSymbolDesc.createEl("em", {
 				text: `E.g. [${
 					this.plugin.settings.includeSymbol
-						? this.plugin.settings.triggerSymbol
+						? this.plugin.settings.globalTriggerSymbol
 						: ""
 				}evan](./evan)`,
 			})
 		);
 		new Setting(this.containerEl)
-			.setName(`Include ${this.plugin.settings.triggerSymbol} symbol`)
+			.setName(`Include prefixing link symbol`)
 			.setDesc(includeSymbolDesc)
 			.addToggle((toggle) =>
 				toggle
@@ -125,13 +132,11 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin limitLinksToFolders option: limit which folders links are sourced from
 		const ruleDesc = document.createDocumentFragment();
 		ruleDesc.append(
-			`${this.plugin.settings.triggerSymbol} linking will only source links from the following folders.`,
+			`Limit symbols to only source suggestions from the following folders.`,
 			ruleDesc.createEl("br"),
-			`For example, you might only want contacts in the Contacts/ folder to be linked when you type ${this.plugin.settings.triggerSymbol}.`,
+			`For example, you might only want contacts in the Contacts/ folder to be linked when you type ${this.plugin.settings.globalTriggerSymbol}.`,
 			ruleDesc.createEl("br"),
-			ruleDesc.createEl("em", {
-				text: "If no folders are added, links will be sourced from all folders.",
-			})
+			"If no limits are added to global trigger symbol, it will source from all folders."
 		);
 
 		new Setting(this.containerEl)
@@ -143,74 +148,63 @@ export class SettingsTab extends PluginSettingTab {
 					.setButtonText("+")
 					.setCta()
 					.onClick(async () => {
-						this.plugin.settings.limitLinkDirectories.push("");
+						this.plugin.settings.limitLinkDirectories.push({
+							folder: "",
+							symbol: "",
+						});
 						await this.plugin.saveSettings();
 						return this.display();
 					});
 			});
 
-		this.plugin.settings.limitLinkDirectories.forEach(
-			(directory, index) => {
-				const newDirectorySetting = new Setting(this.containerEl)
-					.setClass("at-symbol-linking-folder-container")
-					.addSearch((cb) => {
-						new FolderSuggest(this.app, cb.inputEl);
-						cb.setPlaceholder("Folder")
-							.setValue(directory)
-							.onChange(async (newFolder) => {
-								this.plugin.settings.limitLinkDirectories[
-									index
-								] = newFolder.trim();
-								await this.plugin.saveSettings();
-							});
-						cb.inputEl.onblur = () => {
-							this.validate();
-						};
-					})
-					.addExtraButton((cb) => {
-						cb.setIcon("up-chevron-glyph")
-							.setTooltip("Move up")
-							.onClick(async () => {
-								arrayMove(
-									this.plugin.settings.limitLinkDirectories,
-									index,
-									index - 1
-								);
-								await this.plugin.saveSettings();
-								this.display();
-							});
-					})
-					.addExtraButton((cb) => {
-						cb.setIcon("down-chevron-glyph")
-							.setTooltip("Move down")
-							.onClick(async () => {
-								arrayMove(
-									this.plugin.settings.limitLinkDirectories,
-									index,
-									index + 1
-								);
-								await this.plugin.saveSettings();
-								this.display();
-							});
-					})
-					.addExtraButton((cb) => {
-						cb.setIcon("cross")
-							.setTooltip("Delete")
-							.onClick(async () => {
-								this.plugin.settings.limitLinkDirectories.splice(
-									index,
-									1
-								);
-								await this.plugin.saveSettings();
-								this.display();
-							});
-					});
-				newDirectorySetting.controlEl.addClass(
-					"at-symbol-linking-folder-setting"
-				);
-				newDirectorySetting.infoEl.remove();
-			}
-		);
+		this.plugin.settings.limitLinkDirectories.forEach((mapping, index) => {
+			const newDirectorySetting = new Setting(this.containerEl)
+				.setClass("at-symbol-linking-folder-container")
+				.addText((text) => {
+					text.setPlaceholder("Symbol")
+						.setValue(mapping.symbol || "")
+						.onChange(async (value: string) => {
+							this.plugin.settings.limitLinkDirectories[
+								index
+							].symbol = value;
+							await this.plugin.saveSettings();
+						});
+					text.inputEl.onblur = () => {
+						this.validate();
+					};
+					text.inputEl.style.width = "70px";
+				})
+				.addSearch((cb) => {
+					new FolderSuggest(this.app, cb.inputEl);
+					cb.setPlaceholder("Folder")
+						.setValue(mapping.folder)
+						.onChange(async (newFolder) => {
+							this.plugin.settings.limitLinkDirectories[
+								index
+							].folder = newFolder.trim();
+							await this.plugin.saveSettings();
+						});
+					cb.inputEl.onblur = () => {
+						this.validate();
+					};
+				})
+				.addExtraButton((cb) => {
+					cb.setIcon("cross")
+						.setTooltip("Delete")
+						.onClick(async () => {
+							this.plugin.settings.limitLinkDirectories.splice(
+								index,
+								1
+							);
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				});
+			newDirectorySetting.controlEl.addClass(
+				"at-symbol-linking-folder-setting"
+			);
+			newDirectorySetting.infoEl.remove();
+		});
 		// End limitLinksToFolders option
 
 		new Setting(this.containerEl).setName("Add new note").setHeading();
@@ -219,7 +213,7 @@ export class SettingsTab extends PluginSettingTab {
 		new Setting(this.containerEl)
 			.setName("Add new note if it doesn't exist")
 			.setDesc(
-				`If the note doesn't exist when ${this.plugin.settings.triggerSymbol} linking, add an option to create the note.`
+				`If the note doesn't exist when symbol linking, add an option to create the note.`
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -236,7 +230,7 @@ export class SettingsTab extends PluginSettingTab {
 			// Begin add new note template folder
 			const newNoteTemplateDesc = document.createDocumentFragment();
 			newNoteTemplateDesc.append(
-				`Template to use when creating a new note from ${this.plugin.settings.triggerSymbol} link.`,
+				`Template to use when creating a new note from a symbol link.`,
 				newNoteTemplateDesc.createEl("br"),
 				"Uses formats from the ",
 				newNoteTemplateDesc.createEl("a", {
@@ -282,7 +276,7 @@ export class SettingsTab extends PluginSettingTab {
 			new Setting(this.containerEl)
 				.setName("Add new note folder")
 				.setDesc(
-					`Folder to create new notes in when using ${this.plugin.settings.triggerSymbol} linking.`
+					`Folder to create new notes in when using symbol linking.`
 				)
 				.addSearch((cb) => {
 					new FolderSuggest(this.app, cb.inputEl);
@@ -335,7 +329,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin leavePopupOpenForXSpaces option
 		const leavePopupOpenDesc = document.createDocumentFragment();
 		leavePopupOpenDesc.append(
-			`When ${this.plugin.settings.triggerSymbol} linking, you might want to type a full name e.g. "Brandon Sanderson" without the popup closing.`,
+			`When symbol linking, you might want to type a full name e.g. "Brandon Sanderson" without the popup closing.`,
 			leavePopupOpenDesc.createEl("br"),
 			leavePopupOpenDesc.createEl("em", {
 				text: "When set above 0, you'll need to press escape, return/enter, or type over X spaces to close the popup.",
@@ -363,7 +357,7 @@ export class SettingsTab extends PluginSettingTab {
 		// Begin allowedCodeBlockTypes option
 		const allowedCodeBlockTypesDesc = document.createDocumentFragment();
 		allowedCodeBlockTypesDesc.append(
-			`By default, ${this.plugin.settings.triggerSymbol} linking is disabled inside code blocks.`,
+			`By default, symbol linking is disabled inside code blocks.`,
 			allowedCodeBlockTypesDesc.createEl("br"),
 			"Add code block types here to allow linking within those specific code blocks.",
 			allowedCodeBlockTypesDesc.createEl("br"),
@@ -395,7 +389,8 @@ export class SettingsTab extends PluginSettingTab {
 					text.setPlaceholder("ad-note")
 						.setValue(type)
 						.onChange(async (value) => {
-							this.plugin.settings.allowedCodeBlockTypes[index] = value;
+							this.plugin.settings.allowedCodeBlockTypes[index] =
+								value;
 							await this.plugin.saveSettings();
 						});
 				})
@@ -523,28 +518,69 @@ export class SettingsTab extends PluginSettingTab {
 			return this.display();
 		};
 
-		// triggerSymbol should be a single character
-		if (settings.triggerSymbol.length !== 1) {
-			new Notice(`Trigger symbol must be a single character.`);
+		// globalTriggerSymbol should be a single character
+		if (settings.globalTriggerSymbol.length !== 1) {
+			new Notice(`Global trigger symbol must be a single character.`);
 			await updateSetting(
-				"triggerSymbol",
-				settings.triggerSymbol.length ? settings.triggerSymbol[0] : "@"
+				"globalTriggerSymbol",
+				settings.globalTriggerSymbol.length
+					? settings.globalTriggerSymbol[0]
+					: "@"
 			);
 		}
 
 		// Folders should exist
 		for (let i = 0; i < settings.limitLinkDirectories.length; i++) {
-			const folder = settings.limitLinkDirectories[i];
-			if (folder === "") {
+			const mapping = settings.limitLinkDirectories[i];
+			if (mapping.folder === "") {
 				continue;
 			}
-			const folderFile = this.app.vault.getAbstractFileByPath(folder);
+			const folderFile = this.app.vault.getAbstractFileByPath(
+				mapping.folder
+			);
 			if (!folderFile) {
 				new Notice(
-					`Unable to find folder at path: ${folder}. Please add it if you want to limit links to this folder.`
+					`Unable to find folder at path: ${mapping.folder}. Please add it if you want to limit links to this folder.`
 				);
 				const newFolders = [...settings.limitLinkDirectories];
-				newFolders[i] = "";
+				newFolders[i] = { folder: "", symbol: "" };
+				await updateSetting("limitLinkDirectories", newFolders);
+			}
+		}
+
+		// Folder-specific symbols should be single characters
+		for (let i = 0; i < settings.limitLinkDirectories.length; i++) {
+			const mapping = settings.limitLinkDirectories[i];
+			// Make sure symbol isn't part of invalid character regex (if there is invalid char regex)
+			if (mapping.symbol && settings.invalidCharacterRegex) {
+				try {
+					const invalidRegex = new RegExp(
+						settings.invalidCharacterRegex,
+						settings.invalidCharacterRegexFlags
+					);
+					console.log(invalidRegex);
+					console.log(mapping.symbol);
+					console.log(invalidRegex.test(mapping.symbol));
+					if (invalidRegex.test(mapping.symbol)) {
+						new Notice(
+							`Folder symbol "${mapping.symbol}" matches invalid character regex and will not work properly.`
+						);
+						const newFolders = [...settings.limitLinkDirectories];
+						newFolders[i] = { ...mapping, symbol: "" };
+						await updateSetting("limitLinkDirectories", newFolders);
+						continue;
+					}
+				} catch (e) {
+					// Regex validation happens elsewhere
+				}
+			}
+
+			if (mapping.symbol && mapping.symbol.length > 1) {
+				new Notice(
+					`Folder symbol must be a single character or empty.`
+				);
+				const newFolders = [...settings.limitLinkDirectories];
+				newFolders[i] = { ...mapping, symbol: mapping.symbol[0] };
 				await updateSetting("limitLinkDirectories", newFolders);
 			}
 		}

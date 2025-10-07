@@ -7,6 +7,7 @@ import { LinkSuggest } from "./extension-popup";
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 import { removeAccents } from "src/utils/remove-accents";
 import { isAllowedCodeBlockType } from "src/utils/allowed-code-block-check";
+import { getSymbolTriggerInfo } from "src/utils/symbol-folder-mapping";
 
 // Max parents we will iterate through to determine if a click event is outside the suggestion popup
 const maxParentDepth = 5;
@@ -24,6 +25,8 @@ export function atSymbolTriggerExtension(
 			private isOpen = false;
 			private suggestionEl: HTMLDivElement | null = null;
 			private suggestionPopup: LinkSuggest | null = null;
+			private triggerSymbol?: string;
+			private specificFolders?: string[];
 
 			constructor(view: EditorView) {
 				this.view = view;
@@ -45,6 +48,8 @@ export function atSymbolTriggerExtension(
 				this.isOpen = false;
 				this.firstOpenedCursor = null;
 				this.openQuery = "";
+				this.triggerSymbol = "";
+				this.specificFolders = undefined;
 				this.suggestionPopup?.close();
 				this.suggestionEl?.remove();
 				this.suggestionPopup = null;
@@ -52,9 +57,14 @@ export function atSymbolTriggerExtension(
 				return true;
 			}
 
-			private openSuggestion(): boolean {
+			private openSuggestion(
+				triggerSymbol: string,
+				folders?: string[]
+			): boolean {
 				this.isOpen = true;
 				this.firstOpenedCursor = this.getCursor();
+				this.triggerSymbol = triggerSymbol;
+				this.specificFolders = folders;
 				return true;
 			}
 
@@ -116,11 +126,20 @@ export function atSymbolTriggerExtension(
 				}
 
 				let justOpened = false;
-				if (!this.isOpen && typedChar === settings.triggerSymbol) {
-					justOpened = true;
-					this.openSuggestion();
-				} else if (!this.isOpen) {
-					return false;
+				if (!this.isOpen) {
+					const symbolInfo = getSymbolTriggerInfo(
+						typedChar,
+						settings
+					);
+					if (symbolInfo) {
+						justOpened = true;
+						this.openSuggestion(
+							typedChar,
+							symbolInfo.specificFolders
+						);
+					} else {
+						return false;
+					}
 				}
 
 				// Build query when open
@@ -196,7 +215,9 @@ export function atSymbolTriggerExtension(
 						app,
 						this.suggestionEl,
 						settings,
-						this.onSelect.bind(this)
+						this.onSelect.bind(this),
+						this.specificFolders,
+						this.triggerSymbol
 					);
 					this.suggestionPopup.onInputChanged(this.openQuery);
 				}

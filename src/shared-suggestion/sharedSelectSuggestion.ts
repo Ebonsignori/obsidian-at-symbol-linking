@@ -7,7 +7,8 @@ import { type AtSymbolLinkingSettings } from "src/settings/settings";
 export async function sharedSelectSuggestion(
 	app: App,
 	settings: AtSymbolLinkingSettings,
-	value: Fuzzysort.KeysResult<fileOption>
+	value: Fuzzysort.KeysResult<fileOption>,
+	triggeredSymbol?: string
 ): Promise<string> {
 	// When user selects "Create new note" option, create the note to link to
 	let linkFile;
@@ -49,7 +50,11 @@ export async function sharedSelectSuggestion(
 		) as TFile;
 	}
 	let alias = value.obj?.alias || "";
-	if (settings.includeSymbol) alias = `${settings.triggerSymbol}${alias || value.obj?.fileName}`;
+	if (settings.includeSymbol) {
+		// Use the triggered symbol if provided, otherwise fall back to global trigger symbol
+		const symbolToInclude = triggeredSymbol || settings.globalTriggerSymbol;
+		alias = `${symbolToInclude}${alias || value.obj?.fileName}`;
+	}
 	let linkText = app.fileManager.generateMarkdownLink(
 		linkFile,
 		currentFile?.path || "",

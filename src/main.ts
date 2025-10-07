@@ -87,11 +87,30 @@ export default class AtSymbolLinking extends Plugin {
 	}
 
 	async loadSettings() {
+		const loadedData = await this.loadData();
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData()
+			loadedData
 		);
+		
+		// **
+		// V1 -> V2 migration handler
+		// Convert old string array format to new object array format
+		// **
+		if (this.settings.limitLinkDirectories.length > 0) {
+			const firstItem = this.settings.limitLinkDirectories[0];
+			if (typeof firstItem === 'string') {
+				// Set symbol to the default trigger symbol so existing folder limits continue to work
+				this.settings.limitLinkDirectories = (this.settings.limitLinkDirectories as any).map(
+					(folder: string) => ({
+						folder: folder,
+						symbol: this.settings.globalTriggerSymbol
+					})
+				);
+				await this.saveSettings();
+			}
+		}
 	}
 
 	async saveSettings() {

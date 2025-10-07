@@ -7,23 +7,26 @@ import { removeAccents } from "src/utils/remove-accents";
 export function sharedGetSuggestions(
 	files: TFile[],
 	query: string,
-	settings: AtSymbolLinkingSettings
+	settings: AtSymbolLinkingSettings,
+	specificFolders?: string[]
 ): Fuzzysort.KeysResult<fileOption>[] {
 	const options: fileOption[] = [];
 	for (const file of files) {
-		// If there are folders to limit links to, check if the file is in one of them
-		if (settings.limitLinkDirectories.length > 0) {
-			let isAllowed = false;
-			for (const folder of settings.limitLinkDirectories) {
+		// If specific folders are provided, only include files from those folders
+		if (specificFolders && specificFolders.length > 0) {
+			let isInSpecificFolder = false;
+			for (const folder of specificFolders) {
 				if (file.path.startsWith(folder)) {
-					isAllowed = true;
+					isInSpecificFolder = true;
 					break;
 				}
 			}
-			if (!isAllowed) {
+			if (!isInSpecificFolder) {
 				continue;
 			}
 		}
+		// If specificFolders is explicitly undefined (not passed), no folder filtering is applied
+		// This means the trigger symbol has no folder restrictions
 		const meta = app.metadataCache.getFileCache(file);
 		if (meta?.frontmatter?.alias) {
 			options.push({

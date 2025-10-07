@@ -116,18 +116,24 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 	private suggestEl: HTMLElement;
 	private suggest: Suggest<Fuzzysort.KeysResult<fileOption>>;
 	private onSelect: (linkText: string) => void;
+	private specificFolders?: string[];
+	private triggeredSymbol?: string;
 
 	constructor(
 		app: App,
 		inputEl: HTMLDivElement,
 		settings: AtSymbolLinkingSettings,
-		onSelect: (linkText: string) => void
+		onSelect: (linkText: string) => void,
+		specificFolders?: string[],
+		triggeredSymbol?: string
 	) {
 		this.app = app;
 		this.inputEl = inputEl;
 		this.settings = settings;
 		this.scope = new Scope();
 		this.onSelect = onSelect;
+		this.specificFolders = specificFolders;
+		this.triggeredSymbol = triggeredSymbol;
 
 		this.suggestEl = createDiv("suggestion-container");
 		if (Platform.isMobile) {
@@ -220,7 +226,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 
 	getSuggestions(query: string): Fuzzysort.KeysResult<fileOption>[] {
 		const files = this.app.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, query, this.settings);
+		return sharedGetSuggestions(files, query, this.settings, this.specificFolders);
 	}
 
 	renderSuggestion(
@@ -236,7 +242,8 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		const linkText = await sharedSelectSuggestion(
 			this.app,
 			this.settings,
-			value
+			value,
+			this.triggeredSymbol
 		);
 
 		this.onSelect(linkText);

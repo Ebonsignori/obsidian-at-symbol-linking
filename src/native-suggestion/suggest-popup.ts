@@ -14,6 +14,7 @@ import { sharedGetSuggestions } from "src/shared-suggestion/sharedGetSuggestions
 import { isValidFileNameCharacter } from "src/utils/valid-file-name";
 import { isInDisallowedCodeBlock } from "src/utils/allowed-code-block-check";
 import { removeAccents } from "src/utils/remove-accents";
+import { getSymbolTriggerInfo } from "src/utils/symbol-folder-mapping";
 
 export default class SuggestionPopup extends EditorSuggest<
 	Fuzzysort.KeysResult<fileOption>
@@ -23,6 +24,8 @@ export default class SuggestionPopup extends EditorSuggest<
 	private firstOpenedCursor: null | EditorPosition = null;
 	private focused = false;
 	private app: App;
+	private triggeredSymbol: string = "";
+	private specificFolders?: string[];
 	public name = "@ Symbol Linking Suggest";
 
 	constructor(app: App, settings: AtSymbolLinkingSettings) {
@@ -49,7 +52,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		context: EditorSuggestContext
 	): Fuzzysort.KeysResult<fileOption>[] {
 		const files = context.file.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, context.query, this.settings);
+		return sharedGetSuggestions(files, context.query, this.settings, this.specificFolders);
 	}
 
 	onTrigger(
@@ -83,9 +86,12 @@ export default class SuggestionPopup extends EditorSuggest<
 		}
 
 
-		// Open suggestion when trigger is typed
-		if (typedChar === this.settings.triggerSymbol) {
+		// Open suggestion when any trigger symbol is typed (default or folder-specific)
+		const symbolInfo = getSymbolTriggerInfo(typedChar, this.settings);
+		if (symbolInfo) {
 			this.firstOpenedCursor = cursor;
+			this.triggeredSymbol = typedChar;
+			this.specificFolders = symbolInfo.specificFolders;
 			return {
 				start: { ...cursor, ch: cursor.ch - 1 },
 				end: cursor,
@@ -144,17 +150,20 @@ export default class SuggestionPopup extends EditorSuggest<
 				this.context.end
 			) || "";
 
+		// Find the triggered symbol (could be @ or a folder-specific symbol)
+		const symbolToReplace = this.triggeredSymbol || this.settings.globalTriggerSymbol;
+		
 		const linkText = await sharedSelectSuggestion(
 			this.app,
 			this.settings,
-			value
+			value,
+			symbolToReplace
 		);
-
 		this.context?.editor.replaceRange(
 			linkText,
 			{
 				line: this.context.start.line,
-				ch: line.lastIndexOf(this.settings.triggerSymbol),
+				ch: line.lastIndexOf(symbolToReplace),
 			},
 			this.context.end
 		);
@@ -183,6 +192,8 @@ export default class SuggestionPopup extends EditorSuggest<
 
 	closeSuggestion() {
 		this.firstOpenedCursor = null;
+		this.triggeredSymbol = "";
+		this.specificFolders = undefined;
 		this.close();
 		return null;
 	}
