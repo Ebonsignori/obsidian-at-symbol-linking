@@ -2,7 +2,7 @@
 
 ![Gif demo of using the @ symbol to link to a name in Persons/](./docs/at-linking-example-1.4.4.gif)
 
-Adds the ability to link using any symbol (e.g. `@`) in [Obsidian](https://obsidian.md/). Can limit linking to specific folders e.g. `People/`, or map specific characters to open specific folders e.g. `$` to open `References/` and `@` to open `People/`.
+Adds the ability to link using any symbol (e.g. `@`) in [Obsidian](https://obsidian.md/). Can limit linking to specific folders, like `People/`, or map specific characters to open specific folders, like `$` to open `References/` and `@` to open `People/` for more information see [release 2.0 notes](https://github.com/Ebonsignori/obsidian-at-symbol-linking/releases/tag/2.0.0).
 
 Supports [aliases](https://help.obsidian.md/Linking+notes+and+files/Aliases) (nicknames for a file) that you can set in the properties/metadata of a note via the `alias` or `aliases` field.
 
