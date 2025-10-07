@@ -140,7 +140,7 @@ export class SettingsTab extends PluginSettingTab {
 		);
 
 		new Setting(this.containerEl)
-			.setName("Limit links to folders")
+			.setName("Limit links to folders by symbol")
 			.setDesc(ruleDesc)
 			.addButton((button: ButtonComponent) => {
 				button
