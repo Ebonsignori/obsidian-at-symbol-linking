@@ -4,4 +4,5 @@ export type fileOption = {
 	fileName: string;
 	filePath: string;
 	alias?: string;
+	newNoteTemplate?: string;
 };

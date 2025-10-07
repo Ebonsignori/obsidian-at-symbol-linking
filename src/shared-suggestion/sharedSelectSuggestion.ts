@@ -13,18 +13,27 @@ export async function sharedSelectSuggestion(
 	// When user selects "Create new note" option, create the note to link to
 	let linkFile;
 	if (value?.obj?.isCreateNewOption) {
+		// If trying to create a note without a query/name, show notice and return
+		if (!value?.obj?.query || !value?.obj?.filePath) {
+			new Notice("Please type a note name before creating");
+			return "";
+		}
 		let newNoteContents = "";
-		if (settings.addNewNoteTemplateFile) {
+		// Use template from the fileOption if available, otherwise fall back to old settings
+		const templatePath = value.obj?.newNoteTemplate || settings.addNewNoteTemplateFile;
+		if (templatePath) {
 			const fileTemplate = app.vault.getAbstractFileByPath(
-				`${settings.addNewNoteTemplateFile}.md`
+				`${templatePath}.md`
 			) as TFile;
-			newNoteContents = (await app.vault.read(fileTemplate)) || "";
-			// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
-			newNoteContents = await replaceNewFileVars(
-				app,
-				newNoteContents,
-				fileNameNoExtension(value.obj?.filePath)
-			);
+			if (fileTemplate) {
+				newNoteContents = (await app.vault.read(fileTemplate)) || "";
+				// Use core template settings to replace variables: {{title}}, {{date}}, {{time}}
+				newNoteContents = await replaceNewFileVars(
+					app,
+					newNoteContents,
+					fileNameNoExtension(value.obj?.filePath)
+				);
+			}
 		}
 
 		try {
@@ -35,11 +44,18 @@ export async function sharedSelectSuggestion(
 			// Update the alias to the name for displaying the @ link
 			value.obj.alias = value.obj?.query;
 		} catch (error) {
-			new Notice(
-				`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
-				0
-			);
-			throw error;
+			// Check if error is due to file already existing
+			if (error?.message?.includes("already exists") || error?.message?.includes("File already exists")) {
+				new Notice(
+					`Note "${value.obj?.query}" already exists at path: ${value.obj?.filePath}`
+				);
+			} else {
+				new Notice(
+					`Unable to create new note at path: ${value.obj?.filePath}. Please open an issue on GitHub, https://github.com/Ebonsignori/obsidian-at-symbol-linking/issues`,
+					0
+				);
+			}
+			return "";
 		}
 	}
 

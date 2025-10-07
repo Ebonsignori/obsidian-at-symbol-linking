@@ -8,8 +8,42 @@ export function sharedGetSuggestions(
 	files: TFile[],
 	query: string,
 	settings: AtSymbolLinkingSettings,
-	specificFolders?: string[]
+	specificFolders?: string[],
+	triggeredSymbol?: string,
+	isNewNoteOnlySymbol?: boolean
 ): Fuzzysort.KeysResult<fileOption>[] {
+	// If this is a new-note-only symbol, skip file searching and only show create option
+	if (isNewNoteOnlySymbol && settings.showAddNewNote) {
+		const results: Fuzzysort.KeysResult<fileOption>[] = [];
+		const folderMapping = settings.addNewNoteFolders.find(
+			(mapping) => mapping.symbol === triggeredSymbol
+		);
+		if (folderMapping) {
+			const folder = folderMapping.folder || "";
+			const template = folderMapping.template || "";
+			const separator = folder ? "/" : "";
+
+			// Always show "Create new note" option, even with empty query
+			// When no query, show folder path with a placeholder; when query exists, show full path
+			const displayPath = query
+				? `${folder.trim()}${separator}${query.trim()}.md`
+				: folder
+					? `${folder}/...`
+					: "...";
+			
+			results.push({
+				obj: {
+					isCreateNewOption: true,
+					query: query || "",
+					fileName: "Create new note",
+					filePath: displayPath,
+					newNoteTemplate: template,
+				},
+			} as Fuzzysort.KeysResult<fileOption>);
+		}
+		return results;
+	}
+
 	const options: fileOption[] = [];
 	for (const file of files) {
 		// If specific folders are provided, only include files from those folders
@@ -93,13 +127,29 @@ export function sharedGetSuggestions(
 				(result: Fuzzysort.KeysResult<fileOption>) =>
 					!result.obj?.isCreateNewOption
 			);
-			const separator = settings.addNewNoteDirectory ? "/" : "";
+
+			// Find the appropriate folder/template based on triggered symbol
+			let folder = settings.addNewNoteDirectory || "";
+			let template = settings.addNewNoteTemplateFile || "";
+
+			if (triggeredSymbol && settings.addNewNoteFolders.length > 0) {
+				const folderMapping = settings.addNewNoteFolders.find(
+					(mapping) => mapping.symbol === triggeredSymbol
+				);
+				if (folderMapping) {
+					folder = folderMapping.folder || "";
+					template = folderMapping.template || "";
+				}
+			}
+
+			const separator = folder ? "/" : "";
 			results.push({
 				obj: {
 					isCreateNewOption: true,
 					query: query,
 					fileName: "Create new note",
-					filePath: `${settings.addNewNoteDirectory.trim()}${separator}${query.trim()}.md`,
+					filePath: `${folder.trim()}${separator}${query.trim()}.md`,
+					newNoteTemplate: template,
 				},
 			});
 		}

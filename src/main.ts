@@ -94,8 +94,12 @@ export default class AtSymbolLinking extends Plugin {
 			loadedData
 		);
 		
+		await this.migrateSettings();
+	}
+
+	async migrateSettings() {
 		// **
-		// V1 -> V2 migration handler
+		// V1 -> V2 migration handler part 1
 		// Convert old string array format to new object array format
 		// **
 		if (this.settings.limitLinkDirectories.length > 0) {
@@ -110,6 +114,25 @@ export default class AtSymbolLinking extends Plugin {
 				);
 				await this.saveSettings();
 			}
+		}
+		
+		// **
+		// V1 -> V2 migration handler part 2
+		// Migrate old addNewNoteTemplateFile and addNewNoteDirectory to new addNewNoteFolders array
+		// **
+		if (this.settings.showAddNewNote && 
+			(this.settings.addNewNoteTemplateFile || this.settings.addNewNoteDirectory) &&
+			this.settings.addNewNoteFolders.length === 0) {
+			// Only migrate if the new array is empty
+			this.settings.addNewNoteFolders.push({
+				folder: this.settings.addNewNoteDirectory || "",
+				symbol: this.settings.globalTriggerSymbol,
+				template: this.settings.addNewNoteTemplateFile || "",
+			});
+			// After migrating, clear old settings so we don't trigger another migration when the array is empty again
+			this.settings.addNewNoteTemplateFile = "";
+			this.settings.addNewNoteDirectory = "";
+			await this.saveSettings();
 		}
 	}
 

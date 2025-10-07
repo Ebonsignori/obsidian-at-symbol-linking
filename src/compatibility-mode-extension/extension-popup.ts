@@ -118,6 +118,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 	private onSelect: (linkText: string) => void;
 	private specificFolders?: string[];
 	private triggeredSymbol?: string;
+	private isNewNoteOnlySymbol: boolean = false;
 
 	constructor(
 		app: App,
@@ -125,7 +126,8 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		settings: AtSymbolLinkingSettings,
 		onSelect: (linkText: string) => void,
 		specificFolders?: string[],
-		triggeredSymbol?: string
+		triggeredSymbol?: string,
+		isNewNoteOnlySymbol?: boolean
 	) {
 		this.app = app;
 		this.inputEl = inputEl;
@@ -134,6 +136,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 		this.onSelect = onSelect;
 		this.specificFolders = specificFolders;
 		this.triggeredSymbol = triggeredSymbol;
+		this.isNewNoteOnlySymbol = isNewNoteOnlySymbol || false;
 
 		this.suggestEl = createDiv("suggestion-container");
 		if (Platform.isMobile) {
@@ -226,7 +229,7 @@ export class LinkSuggest implements IOwner<Fuzzysort.KeysResult<fileOption>> {
 
 	getSuggestions(query: string): Fuzzysort.KeysResult<fileOption>[] {
 		const files = this.app.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, query, this.settings, this.specificFolders);
+		return sharedGetSuggestions(files, query, this.settings, this.specificFolders, this.triggeredSymbol, this.isNewNoteOnlySymbol);
 	}
 
 	renderSuggestion(

@@ -14,12 +14,20 @@ export interface FolderSymbolMapping {
 	symbol?: string;
 }
 
+export interface NewNoteFolderMapping {
+	folder: string;
+	symbol: string;
+	template?: string;
+}
+
 export interface AtSymbolLinkingSettings {
 	globalTriggerSymbol: string;
 	includeSymbol: boolean;
 	limitLinkDirectories: Array<FolderSymbolMapping>;
 
 	showAddNewNote: boolean;
+	addNewNoteFolders: Array<NewNoteFolderMapping>;
+	// Deprecated settings (kept for backward compatibility and migration)
 	addNewNoteTemplateFile: string;
 	addNewNoteDirectory: string;
 
@@ -39,6 +47,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	includeSymbol: true,
 
 	showAddNewNote: false,
+	addNewNoteFolders: [],
 	addNewNoteTemplateFile: "",
 	addNewNoteDirectory: "",
 
@@ -227,71 +236,113 @@ export class SettingsTab extends PluginSettingTab {
 		// End add new note option
 
 		if (this.plugin.settings.showAddNewNote) {
-			// Begin add new note template folder
-			const newNoteTemplateDesc = document.createDocumentFragment();
-			newNoteTemplateDesc.append(
-				`Template to use when creating a new note from a symbol link.`,
-				newNoteTemplateDesc.createEl("br"),
-				"Uses formats from the ",
-				newNoteTemplateDesc.createEl("a", {
+			// Begin add new notes for folders by symbol
+			const newNoteFoldersDesc = document.createDocumentFragment();
+			newNoteFoldersDesc.append(
+				`Configure folders where new notes can be created with specific symbols.`,
+				newNoteFoldersDesc.createEl("br"),
+				"Each symbol must be unique. Templates use formats from the ",
+				newNoteFoldersDesc.createEl("a", {
 					text: "core templates plugin",
 					href: "https://help.obsidian.md/Plugins/Templates",
 				}),
-				" to replace the following variables in the template:",
-				newNoteTemplateDesc.createEl("br"),
-				newNoteTemplateDesc.createEl("code", {
+				" (",
+				newNoteFoldersDesc.createEl("code", {
 					text: "{{title}}",
 				}),
-				" - The title of the new file",
-				newNoteTemplateDesc.createEl("br"),
-				newNoteTemplateDesc.createEl("code", {
+				", ",
+				newNoteFoldersDesc.createEl("code", {
 					text: "{{date}}",
 				}),
-				" - The current date",
-				newNoteTemplateDesc.createEl("br"),
-				newNoteTemplateDesc.createEl("code", {
+				", ",
+				newNoteFoldersDesc.createEl("code", {
 					text: "{{time}}",
 				}),
-				" - The current time"
+				")."
 			);
-			new Setting(this.containerEl)
-				.setName("Add new note template")
-				.setDesc(newNoteTemplateDesc)
-				.addSearch((cb) => {
-					new FileSuggest(this.app, cb.inputEl);
-					cb.setPlaceholder("No template (blank note)")
-						.setValue(this.plugin.settings.addNewNoteTemplateFile)
-						.onChange(async (newFile) => {
-							this.plugin.settings.addNewNoteTemplateFile =
-								newFile.trim();
-							await this.plugin.saveSettings();
-						});
-					cb.inputEl.onblur = () => {
-						this.validate();
-					};
-				});
-			// End add new note template folder
 
-			// Begin add new note directory
 			new Setting(this.containerEl)
-				.setName("Add new note folder")
-				.setDesc(
-					`Folder to create new notes in when using symbol linking.`
-				)
-				.addSearch((cb) => {
-					new FolderSuggest(this.app, cb.inputEl);
-					cb.setPlaceholder("No folder (root)")
-						.setValue(this.plugin.settings.addNewNoteDirectory)
-						.onChange(async (newFolder) => {
-							this.plugin.settings.addNewNoteDirectory =
-								newFolder.trim();
+				.setName("Add new notes for folders by symbol")
+				.setDesc(newNoteFoldersDesc)
+				.addButton((button: ButtonComponent) => {
+					button
+						.setTooltip("Add folder")
+						.setButtonText("+")
+						.setCta()
+						.onClick(async () => {
+							this.plugin.settings.addNewNoteFolders.push({
+								folder: "",
+								symbol: "",
+								template: "",
+							});
 							await this.plugin.saveSettings();
+							return this.display();
 						});
-					cb.inputEl.onblur = () => {
-						this.validate();
-					};
 				});
-			// End add new note directory
+
+			this.plugin.settings.addNewNoteFolders.forEach((mapping, index) => {
+				const newFolderSetting = new Setting(this.containerEl)
+					.setClass("at-symbol-linking-folder-container")
+					.addText((text) => {
+						text.setPlaceholder("Symbol")
+							.setValue(mapping.symbol || "")
+							.onChange(async (value: string) => {
+								this.plugin.settings.addNewNoteFolders[
+									index
+								].symbol = value;
+								await this.plugin.saveSettings();
+							});
+						text.inputEl.onblur = () => {
+							this.validate();
+						};
+						text.inputEl.style.width = "70px";
+					})
+					.addSearch((cb) => {
+						new FolderSuggest(this.app, cb.inputEl);
+						cb.setPlaceholder("Folder")
+							.setValue(mapping.folder)
+							.onChange(async (newFolder) => {
+								this.plugin.settings.addNewNoteFolders[
+									index
+								].folder = newFolder.trim();
+								await this.plugin.saveSettings();
+							});
+						cb.inputEl.onblur = () => {
+							this.validate();
+						};
+					})
+					.addSearch((cb) => {
+						new FileSuggest(this.app, cb.inputEl);
+						cb.setPlaceholder("No template (blank)")
+							.setValue(mapping.template || "")
+							.onChange(async (newFile) => {
+								this.plugin.settings.addNewNoteFolders[
+									index
+								].template = newFile.trim();
+								await this.plugin.saveSettings();
+							});
+						cb.inputEl.onblur = () => {
+							this.validate();
+						};
+					})
+					.addExtraButton((cb) => {
+						cb.setIcon("cross")
+							.setTooltip("Delete")
+							.onClick(async () => {
+								this.plugin.settings.addNewNoteFolders.splice(
+									index,
+									1
+								);
+								await this.plugin.saveSettings();
+								this.display();
+							});
+					});
+				newFolderSetting.controlEl.addClass(
+					"at-symbol-linking-folder-setting"
+				);
+				newFolderSetting.infoEl.remove();
+			});
+			// End add new notes for folders by symbol
 		}
 
 		new Setting(this.containerEl)
@@ -558,9 +609,6 @@ export class SettingsTab extends PluginSettingTab {
 						settings.invalidCharacterRegex,
 						settings.invalidCharacterRegexFlags
 					);
-					console.log(invalidRegex);
-					console.log(mapping.symbol);
-					console.log(invalidRegex.test(mapping.symbol));
 					if (invalidRegex.test(mapping.symbol)) {
 						new Notice(
 							`Folder symbol "${mapping.symbol}" matches invalid character regex and will not work properly.`
@@ -585,29 +633,91 @@ export class SettingsTab extends PluginSettingTab {
 			}
 		}
 
-		// Template file should exist when add new note option is enabled
-		if (settings.showAddNewNote && settings.addNewNoteTemplateFile) {
-			const templateFile = this.app.vault.getAbstractFileByPath(
-				`${settings.addNewNoteTemplateFile}.md`
-			);
-			if (!templateFile) {
-				new Notice(
-					`Unable to find template file at path: ${settings.addNewNoteTemplateFile}.md`
-				);
-				await updateSetting("addNewNoteTemplateFile", "");
-			}
-		}
+		// Validate new note folders when add new note option is enabled
+		if (settings.showAddNewNote) {
+			// Track which symbols we've seen to keep only the first occurrence
+			const seenSymbols = new Set<string>();
+			
+			for (let i = 0; i < settings.addNewNoteFolders.length; i++) {
+				const mapping = settings.addNewNoteFolders[i];
 
-		// Destination directory should exist when add new note option is enabled
-		if (settings.showAddNewNote && settings.addNewNoteDirectory) {
-			const templateFile = this.app.vault.getAbstractFileByPath(
-				`${settings.addNewNoteDirectory}`
-			);
-			if (!templateFile) {
-				new Notice(
-					`Unable to find folder for new notes at path: ${settings.addNewNoteDirectory}. Please add it if you want to create new notes in this folder.`
-				);
-				await updateSetting("addNewNoteDirectory", "");
+				// Symbol must be a single character
+				if (mapping.symbol && mapping.symbol.length > 1) {
+					new Notice(
+						`New note folder symbol must be a single character.`
+					);
+					const newFolders = [...settings.addNewNoteFolders];
+					newFolders[i] = { ...mapping, symbol: mapping.symbol[0] };
+					await updateSetting("addNewNoteFolders", newFolders);
+					continue;
+				}
+
+				// Symbol must be unique - clear duplicates after the first occurrence
+				if (mapping.symbol) {
+					if (seenSymbols.has(mapping.symbol)) {
+						new Notice(
+							`New note folder symbol "${mapping.symbol}" must be unique. Clearing duplicate occurrence.`
+						);
+						const newFolders = [...settings.addNewNoteFolders];
+						newFolders[i] = { ...mapping, symbol: "" };
+						await updateSetting("addNewNoteFolders", newFolders);
+						continue;
+					}
+					seenSymbols.add(mapping.symbol);
+				}
+
+				// Make sure symbol isn't part of invalid character regex
+				if (mapping.symbol && settings.invalidCharacterRegex) {
+					try {
+						const invalidRegex = new RegExp(
+							settings.invalidCharacterRegex,
+							settings.invalidCharacterRegexFlags
+						);
+						if (invalidRegex.test(mapping.symbol)) {
+							new Notice(
+								`New note folder symbol "${mapping.symbol}" matches invalid character regex and will not work properly.`
+							);
+							const newFolders = [...settings.addNewNoteFolders];
+							newFolders[i] = { ...mapping, symbol: "" };
+							await updateSetting("addNewNoteFolders", newFolders);
+							continue;
+						}
+					} catch (e) {
+						// Regex validation happens elsewhere
+					}
+				}
+
+				// Folder should exist
+				if (mapping.folder) {
+					const folderFile = this.app.vault.getAbstractFileByPath(
+						mapping.folder
+					);
+					if (!folderFile) {
+						new Notice(
+							`Unable to find folder at path: ${mapping.folder}. Please add it if you want to create new notes in this folder.`
+						);
+						const newFolders = [...settings.addNewNoteFolders];
+						newFolders[i] = { ...mapping, folder: "" };
+						await updateSetting("addNewNoteFolders", newFolders);
+						continue;
+					}
+				}
+
+				// Template file should exist
+				if (mapping.template) {
+					const templateFile = this.app.vault.getAbstractFileByPath(
+						`${mapping.template}.md`
+					);
+					if (!templateFile) {
+						new Notice(
+							`Unable to find template file at path: ${mapping.template}.md`
+						);
+						const newFolders = [...settings.addNewNoteFolders];
+						newFolders[i] = { ...mapping, template: "" };
+						await updateSetting("addNewNoteFolders", newFolders);
+						continue;
+					}
+				}
 			}
 		}
 

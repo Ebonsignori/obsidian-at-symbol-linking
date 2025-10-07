@@ -26,6 +26,7 @@ export default class SuggestionPopup extends EditorSuggest<
 	private app: App;
 	private triggeredSymbol: string = "";
 	private specificFolders?: string[];
+	private isNewNoteOnlySymbol: boolean = false;
 	public name = "@ Symbol Linking Suggest";
 
 	constructor(app: App, settings: AtSymbolLinkingSettings) {
@@ -52,7 +53,7 @@ export default class SuggestionPopup extends EditorSuggest<
 		context: EditorSuggestContext
 	): Fuzzysort.KeysResult<fileOption>[] {
 		const files = context.file.vault.getMarkdownFiles();
-		return sharedGetSuggestions(files, context.query, this.settings, this.specificFolders);
+		return sharedGetSuggestions(files, context.query, this.settings, this.specificFolders, this.triggeredSymbol, this.isNewNoteOnlySymbol);
 	}
 
 	onTrigger(
@@ -92,6 +93,7 @@ export default class SuggestionPopup extends EditorSuggest<
 			this.firstOpenedCursor = cursor;
 			this.triggeredSymbol = typedChar;
 			this.specificFolders = symbolInfo.specificFolders;
+			this.isNewNoteOnlySymbol = symbolInfo.isNewNoteOnlySymbol || false;
 			return {
 				start: { ...cursor, ch: cursor.ch - 1 },
 				end: cursor,

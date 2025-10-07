@@ -27,6 +27,7 @@ export function atSymbolTriggerExtension(
 			private suggestionPopup: LinkSuggest | null = null;
 			private triggerSymbol?: string;
 			private specificFolders?: string[];
+			private isNewNoteOnlySymbol: boolean = false;
 
 			constructor(view: EditorView) {
 				this.view = view;
@@ -50,6 +51,7 @@ export function atSymbolTriggerExtension(
 				this.openQuery = "";
 				this.triggerSymbol = "";
 				this.specificFolders = undefined;
+				this.isNewNoteOnlySymbol = false;
 				this.suggestionPopup?.close();
 				this.suggestionEl?.remove();
 				this.suggestionPopup = null;
@@ -59,12 +61,14 @@ export function atSymbolTriggerExtension(
 
 			private openSuggestion(
 				triggerSymbol: string,
-				folders?: string[]
+				folders?: string[],
+				isNewNoteOnlySymbol?: boolean
 			): boolean {
 				this.isOpen = true;
 				this.firstOpenedCursor = this.getCursor();
 				this.triggerSymbol = triggerSymbol;
 				this.specificFolders = folders;
+				this.isNewNoteOnlySymbol = isNewNoteOnlySymbol || false;
 				return true;
 			}
 
@@ -135,7 +139,8 @@ export function atSymbolTriggerExtension(
 						justOpened = true;
 						this.openSuggestion(
 							typedChar,
-							symbolInfo.specificFolders
+							symbolInfo.specificFolders,
+							symbolInfo.isNewNoteOnlySymbol
 						);
 					} else {
 						return false;
@@ -217,7 +222,8 @@ export function atSymbolTriggerExtension(
 						settings,
 						this.onSelect.bind(this),
 						this.specificFolders,
-						this.triggerSymbol
+						this.triggerSymbol,
+						this.isNewNoteOnlySymbol
 					);
 					this.suggestionPopup.onInputChanged(this.openQuery);
 				}

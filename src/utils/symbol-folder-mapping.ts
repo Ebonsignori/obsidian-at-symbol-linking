@@ -3,6 +3,7 @@ import { AtSymbolLinkingSettings } from "src/settings/settings";
 export interface SymbolTriggerInfo {
 	isGlobalSymbol: boolean;
 	specificFolders?: string[];
+	isNewNoteOnlySymbol?: boolean;
 }
 
 /**
@@ -58,6 +59,21 @@ export function getSymbolTriggerInfo(
 			isGlobalSymbol: false,
 			specificFolders: matchingFolders,
 		};
+	}
+
+	// Check if it's a symbol configured for creating new notes (but not in limitLinkDirectories)
+	// This allows the popup to trigger for new note creation even without folder restrictions
+	if (settings.showAddNewNote && settings.addNewNoteFolders.length > 0) {
+		for (const mapping of settings.addNewNoteFolders) {
+			if (mapping.symbol && mapping.symbol === typedChar) {
+				// This symbol is for new notes only, not for searching existing files
+				return {
+					isGlobalSymbol: false,
+					specificFolders: [], // Empty array means no existing files should be shown
+					isNewNoteOnlySymbol: true,
+				};
+			}
+		}
 	}
 
 	return null;
