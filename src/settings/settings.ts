@@ -27,6 +27,7 @@ export interface AtSymbolLinkingSettings {
 
 	showAddNewNote: boolean;
 	addNewNoteFolders: Array<NewNoteFolderMapping>;
+	includeSymbolInNewFileName: boolean;
 	// Deprecated settings (kept for backward compatibility and migration)
 	addNewNoteTemplateFile: string;
 	addNewNoteDirectory: string;
@@ -48,6 +49,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 
 	showAddNewNote: false,
 	addNewNoteFolders: [],
+	includeSymbolInNewFileName: false,
 	addNewNoteTemplateFile: "",
 	addNewNoteDirectory: "",
 
@@ -125,7 +127,7 @@ export class SettingsTab extends PluginSettingTab {
 			})
 		);
 		new Setting(this.containerEl)
-			.setName(`Include prefixing link symbol`)
+			.setName(`Include link symbol prefix in display text`)
 			.setDesc(includeSymbolDesc)
 			.addToggle((toggle) =>
 				toggle
@@ -236,6 +238,33 @@ export class SettingsTab extends PluginSettingTab {
 		// End add new note option
 
 		if (this.plugin.settings.showAddNewNote) {
+			// Begin include symbol in new file name option
+			const includeSymbolInFileNameDesc = document.createDocumentFragment();
+			includeSymbolInFileNameDesc.append(
+				"Include the linking symbol prefix in newly created file names.",
+				includeSymbolInFileNameDesc.createEl("br"),
+				includeSymbolInFileNameDesc.createEl("em", {
+					text: `E.g. typing "${this.plugin.settings.globalTriggerSymbol}John Doe" will create "${
+						this.plugin.settings.includeSymbolInNewFileName
+							? this.plugin.settings.globalTriggerSymbol
+							: ""
+					}John Doe.md"`,
+				})
+			);
+			new Setting(this.containerEl)
+				.setName("Include link symbol prefix in new file names")
+				.setDesc(includeSymbolInFileNameDesc)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.includeSymbolInNewFileName)
+						.onChange((value: boolean) => {
+							this.plugin.settings.includeSymbolInNewFileName = value;
+							this.plugin.saveSettings();
+							this.display();
+						})
+				);
+			// End include symbol in new file name option
+
 			// Begin add new notes for folders by symbol
 			const newNoteFoldersDesc = document.createDocumentFragment();
 			newNoteFoldersDesc.append(

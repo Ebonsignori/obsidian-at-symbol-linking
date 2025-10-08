@@ -25,8 +25,9 @@ export function sharedGetSuggestions(
 
 			// Always show "Create new note" option, even with empty query
 			// When no query, show folder path with a placeholder; when query exists, show full path
+			const symbolPrefix = settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
 			const displayPath = query
-				? `${folder.trim()}${separator}${query.trim()}.md`
+				? `${folder.trim()}${separator}${symbolPrefix}${query.trim()}.md`
 				: folder
 					? `${folder}/...`
 					: "...";
@@ -143,12 +144,13 @@ export function sharedGetSuggestions(
 			}
 
 			const separator = folder ? "/" : "";
+			const symbolPrefix = settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
 			results.push({
 				obj: {
 					isCreateNewOption: true,
 					query: query,
 					fileName: "Create new note",
-					filePath: `${folder.trim()}${separator}${query.trim()}.md`,
+					filePath: `${folder.trim()}${separator}${symbolPrefix}${query.trim()}.md`,
 					newNoteTemplate: template,
 				},
 			});
