@@ -1,7 +1,7 @@
 {
   "id": "at-symbol-linking",
   "name": "@ Symbol Linking",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "minAppVersion": "0.15.0",
   "description": "Adds ability to link with @ (the At Symbol) in Obsidian. Can limit @ linking to specific folders e.g. People/",
   "author": "Evan Bonsignori",
