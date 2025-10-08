@@ -1,10 +1,11 @@
 import fuzzysort from "fuzzysort";
-import { type TFile } from "obsidian";
+import { type TFile, type App } from "obsidian";
 import { type AtSymbolLinkingSettings } from "src/settings/settings";
 import { type fileOption } from "src/types";
 import { removeAccents } from "src/utils/remove-accents";
 
 export function sharedGetSuggestions(
+	app: App,
 	files: TFile[],
 	query: string,
 	settings: AtSymbolLinkingSettings,
