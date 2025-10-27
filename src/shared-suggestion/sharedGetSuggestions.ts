@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { type TFile, type App } from "obsidian";
+import { type App, type TFile } from "obsidian";
 import { type AtSymbolLinkingSettings } from "src/settings/settings";
 import { type fileOption } from "src/types";
 import { removeAccents } from "src/utils/remove-accents";
@@ -26,13 +26,16 @@ export function sharedGetSuggestions(
 
 			// Always show "Create new note" option, even with empty query
 			// When no query, show folder path with a placeholder; when query exists, show full path
-			const symbolPrefix = settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
+			const symbolPrefix =
+				settings.includeSymbolInNewFileName && triggeredSymbol
+					? triggeredSymbol
+					: "";
 			const displayPath = query
 				? `${folder.trim()}${separator}${symbolPrefix}${query.trim()}.md`
 				: folder
-					? `${folder}/...`
-					: "...";
-			
+				? `${folder}/...`
+				: "...";
+
 			results.push({
 				obj: {
 					isCreateNewOption: true,
@@ -145,7 +148,10 @@ export function sharedGetSuggestions(
 			}
 
 			const separator = folder ? "/" : "";
-			const symbolPrefix = settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
+			const symbolPrefix =
+				settings.includeSymbolInNewFileName && triggeredSymbol
+					? triggeredSymbol
+					: "";
 			results.push({
 				obj: {
 					isCreateNewOption: true,

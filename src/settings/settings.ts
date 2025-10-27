@@ -6,8 +6,8 @@ import {
 	Setting,
 } from "obsidian";
 import AtSymbolLinking from "src/main";
-import { FolderSuggest } from "./folder-suggest";
 import { FileSuggest } from "./file-suggest";
+import { FolderSuggest } from "./folder-suggest";
 
 export interface FolderSymbolMapping {
 	folder: string;
@@ -39,6 +39,8 @@ export interface AtSymbolLinkingSettings {
 	invalidCharacterRegex: string;
 	invalidCharacterRegexFlags: string;
 
+	doNotPasteAlias: boolean;
+
 	removeAccents: boolean;
 }
 
@@ -60,6 +62,8 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	// eslint-disable-next-line no-useless-escape
 	invalidCharacterRegex: `[\\[\\]^|#]`,
 	invalidCharacterRegexFlags: "i",
+
+	doNotPasteAlias: false,
 
 	removeAccents: true,
 };
@@ -239,12 +243,15 @@ export class SettingsTab extends PluginSettingTab {
 
 		if (this.plugin.settings.showAddNewNote) {
 			// Begin include symbol in new file name option
-			const includeSymbolInFileNameDesc = document.createDocumentFragment();
+			const includeSymbolInFileNameDesc =
+				document.createDocumentFragment();
 			includeSymbolInFileNameDesc.append(
 				"Include the linking symbol prefix in newly created file names.",
 				includeSymbolInFileNameDesc.createEl("br"),
 				includeSymbolInFileNameDesc.createEl("em", {
-					text: `E.g. typing "${this.plugin.settings.globalTriggerSymbol}John Doe" will create "${
+					text: `E.g. typing "${
+						this.plugin.settings.globalTriggerSymbol
+					}John Doe" will create "${
 						this.plugin.settings.includeSymbolInNewFileName
 							? this.plugin.settings.globalTriggerSymbol
 							: ""
@@ -256,9 +263,12 @@ export class SettingsTab extends PluginSettingTab {
 				.setDesc(includeSymbolInFileNameDesc)
 				.addToggle((toggle) =>
 					toggle
-						.setValue(this.plugin.settings.includeSymbolInNewFileName)
+						.setValue(
+							this.plugin.settings.includeSymbolInNewFileName
+						)
 						.onChange((value: boolean) => {
-							this.plugin.settings.includeSymbolInNewFileName = value;
+							this.plugin.settings.includeSymbolInNewFileName =
+								value;
 							this.plugin.saveSettings();
 							this.display();
 						})
@@ -584,6 +594,19 @@ export class SettingsTab extends PluginSettingTab {
 						this.plugin.saveSettings();
 					})
 			);
+
+		// Begin prefer alias option
+		new Setting(this.containerEl)
+			.setName("Do not paste alias")
+			.setDesc("Will always paste the pure filename.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.doNotPasteAlias)
+					.onChange((value: boolean) => {
+						this.plugin.settings.doNotPasteAlias = value;
+						this.plugin.saveSettings();
+					})
+			);
 	}
 
 	async validate(editedSetting?: string) {
@@ -666,7 +689,7 @@ export class SettingsTab extends PluginSettingTab {
 		if (settings.showAddNewNote) {
 			// Track which symbols we've seen to keep only the first occurrence
 			const seenSymbols = new Set<string>();
-			
+
 			for (let i = 0; i < settings.addNewNoteFolders.length; i++) {
 				const mapping = settings.addNewNoteFolders[i];
 
@@ -708,7 +731,10 @@ export class SettingsTab extends PluginSettingTab {
 							);
 							const newFolders = [...settings.addNewNoteFolders];
 							newFolders[i] = { ...mapping, symbol: "" };
-							await updateSetting("addNewNoteFolders", newFolders);
+							await updateSetting(
+								"addNewNoteFolders",
+								newFolders
+							);
 							continue;
 						}
 					} catch (e) {
