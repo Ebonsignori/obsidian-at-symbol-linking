@@ -33,8 +33,8 @@ export function sharedGetSuggestions(
 			const displayPath = query
 				? `${folder.trim()}${separator}${symbolPrefix}${query.trim()}.md`
 				: folder
-				? `${folder}/...`
-				: "...";
+				 ? `${folder}/...`
+				 : "...";
 
 			results.push({
 				obj: {
