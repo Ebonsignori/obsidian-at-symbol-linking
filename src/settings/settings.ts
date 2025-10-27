@@ -589,7 +589,7 @@ export class SettingsTab extends PluginSettingTab {
 					})
 			);
 
-		// Begin prefer alias option
+		// Begin file name only option
 		new Setting(this.containerEl)
 			.setName("Insert file name only")
 			.setDesc("Insert only the file name, ignoring its alias.")
