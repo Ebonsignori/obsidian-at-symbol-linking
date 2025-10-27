@@ -1,8 +1,8 @@
-import { Notice, type TFile, type App } from "obsidian";
-import { fileOption } from "src/types";
-import { replaceNewFileVars } from "src/utils/replace-new-file-vars";
-import { fileNameNoExtension } from "src/utils/path";
+import { Notice, type App, type TFile } from "obsidian";
 import { type AtSymbolLinkingSettings } from "src/settings/settings";
+import { fileOption } from "src/types";
+import { fileNameNoExtension } from "src/utils/path";
+import { replaceNewFileVars } from "src/utils/replace-new-file-vars";
 
 export async function sharedSelectSuggestion(
 	app: App,
@@ -65,7 +65,7 @@ export async function sharedSelectSuggestion(
 			value.obj?.filePath
 		) as TFile;
 	}
-	let alias = (!settings.doNotPasteAlias && value.obj?.alias) || "";
+	let alias = (!settings.insertFileNameOnly && value.obj?.alias) || "";
 
 	if (settings.includeSymbol) {
 		// Use the triggered symbol if provided, otherwise fall back to global trigger symbol

@@ -6,8 +6,8 @@ import {
 	Setting,
 } from "obsidian";
 import AtSymbolLinking from "src/main";
-import { FolderSuggest } from "./folder-suggest";
 import { FileSuggest } from "./file-suggest";
+import { FolderSuggest } from "./folder-suggest";
 
 export interface FolderSymbolMapping {
 	folder: string;
@@ -39,7 +39,7 @@ export interface AtSymbolLinkingSettings {
 	invalidCharacterRegex: string;
 	invalidCharacterRegexFlags: string;
 
-	doNotPasteAlias: boolean;
+	insertFileNameOnly: boolean;
 
 	removeAccents: boolean;
 }
@@ -63,7 +63,7 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	invalidCharacterRegex: `[\\[\\]^|#]`,
 	invalidCharacterRegexFlags: "i",
 
-	doNotPasteAlias: false,
+	insertFileNameOnly: false,
 
 	removeAccents: true,
 };
@@ -591,13 +591,13 @@ export class SettingsTab extends PluginSettingTab {
 
 		// Begin prefer alias option
 		new Setting(this.containerEl)
-			.setName("Do not paste alias")
-			.setDesc("Will always paste the pure filename.")
+			.setName("Insert file name only")
+			.setDesc("Insert only the file name, ignoring its alias.")
 			.addToggle((toggle) =>
 				toggle
-					.setValue(this.plugin.settings.doNotPasteAlias)
+					.setValue(this.plugin.settings.insertFileNameOnly)
 					.onChange((value: boolean) => {
-						this.plugin.settings.doNotPasteAlias = value;
+						this.plugin.settings.insertFileNameOnly = value;
 						this.plugin.saveSettings();
 					})
 			);
