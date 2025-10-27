@@ -39,6 +39,8 @@ export interface AtSymbolLinkingSettings {
 	invalidCharacterRegex: string;
 	invalidCharacterRegexFlags: string;
 
+	insertFileNameOnly: boolean;
+
 	removeAccents: boolean;
 }
 
@@ -60,6 +62,8 @@ export const DEFAULT_SETTINGS: AtSymbolLinkingSettings = {
 	// eslint-disable-next-line no-useless-escape
 	invalidCharacterRegex: `[\\[\\]^|#]`,
 	invalidCharacterRegexFlags: "i",
+
+	insertFileNameOnly: false,
 
 	removeAccents: true,
 };
@@ -584,6 +588,19 @@ export class SettingsTab extends PluginSettingTab {
 						this.plugin.saveSettings();
 					})
 			);
+
+		// Begin file name only option
+		new Setting(this.containerEl)
+			.setName("Insert file name only")
+			.setDesc("Insert only the file name, ignoring its alias.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.insertFileNameOnly)
+					.onChange((value: boolean) => {
+						this.plugin.settings.insertFileNameOnly = value;
+						this.plugin.saveSettings();
+					})
+			);
 	}
 
 	async validate(editedSetting?: string) {
@@ -666,7 +683,7 @@ export class SettingsTab extends PluginSettingTab {
 		if (settings.showAddNewNote) {
 			// Track which symbols we've seen to keep only the first occurrence
 			const seenSymbols = new Set<string>();
-			
+
 			for (let i = 0; i < settings.addNewNoteFolders.length; i++) {
 				const mapping = settings.addNewNoteFolders[i];
 

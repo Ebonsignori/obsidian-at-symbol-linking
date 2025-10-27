@@ -30,9 +30,9 @@ export function sharedGetSuggestions(
 			const displayPath = query
 				? `${folder.trim()}${separator}${symbolPrefix}${query.trim()}.md`
 				: folder
-					? `${folder}/...`
-					: "...";
-			
+				    ? `${folder}/...`
+				    : "...";
+
 			results.push({
 				obj: {
 					isCreateNewOption: true,
@@ -145,7 +145,8 @@ export function sharedGetSuggestions(
 			}
 
 			const separator = folder ? "/" : "";
-			const symbolPrefix = settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
+			const symbolPrefix =
+				settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
 			results.push({
 				obj: {
 					isCreateNewOption: true,
