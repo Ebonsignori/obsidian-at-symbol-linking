@@ -1,10 +1,4 @@
-import {
-	App,
-	ButtonComponent,
-	Notice,
-	PluginSettingTab,
-	Setting,
-} from "obsidian";
+import { App, ButtonComponent, Notice, PluginSettingTab, Setting } from "obsidian";
 import AtSymbolLinking from "src/main";
 import { FileSuggest } from "./file-suggest";
 import { FolderSuggest } from "./folder-suggest";
@@ -243,15 +237,12 @@ export class SettingsTab extends PluginSettingTab {
 
 		if (this.plugin.settings.showAddNewNote) {
 			// Begin include symbol in new file name option
-			const includeSymbolInFileNameDesc =
-				document.createDocumentFragment();
+			const includeSymbolInFileNameDesc = document.createDocumentFragment();
 			includeSymbolInFileNameDesc.append(
 				"Include the linking symbol prefix in newly created file names.",
 				includeSymbolInFileNameDesc.createEl("br"),
 				includeSymbolInFileNameDesc.createEl("em", {
-					text: `E.g. typing "${
-						this.plugin.settings.globalTriggerSymbol
-					}John Doe" will create "${
+					text: `E.g. typing "${this.plugin.settings.globalTriggerSymbol}John Doe" will create "${
 						this.plugin.settings.includeSymbolInNewFileName
 							? this.plugin.settings.globalTriggerSymbol
 							: ""
@@ -263,12 +254,9 @@ export class SettingsTab extends PluginSettingTab {
 				.setDesc(includeSymbolInFileNameDesc)
 				.addToggle((toggle) =>
 					toggle
-						.setValue(
-							this.plugin.settings.includeSymbolInNewFileName
-						)
+						.setValue(this.plugin.settings.includeSymbolInNewFileName)
 						.onChange((value: boolean) => {
-							this.plugin.settings.includeSymbolInNewFileName =
-								value;
+							this.plugin.settings.includeSymbolInNewFileName = value;
 							this.plugin.saveSettings();
 							this.display();
 						})
@@ -731,10 +719,7 @@ export class SettingsTab extends PluginSettingTab {
 							);
 							const newFolders = [...settings.addNewNoteFolders];
 							newFolders[i] = { ...mapping, symbol: "" };
-							await updateSetting(
-								"addNewNoteFolders",
-								newFolders
-							);
+							await updateSetting("addNewNoteFolders", newFolders);
 							continue;
 						}
 					} catch (e) {

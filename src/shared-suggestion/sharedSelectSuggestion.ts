@@ -1,8 +1,8 @@
-import { Notice, type App, type TFile } from "obsidian";
-import { type AtSymbolLinkingSettings } from "src/settings/settings";
+import { Notice, type TFile, type App } from "obsidian";
 import { fileOption } from "src/types";
-import { fileNameNoExtension } from "src/utils/path";
 import { replaceNewFileVars } from "src/utils/replace-new-file-vars";
+import { fileNameNoExtension } from "src/utils/path";
+import { type AtSymbolLinkingSettings } from "src/settings/settings";
 
 export async function sharedSelectSuggestion(
 	app: App,
@@ -20,8 +20,7 @@ export async function sharedSelectSuggestion(
 		}
 		let newNoteContents = "";
 		// Use template from the fileOption if available, otherwise fall back to old settings
-		const templatePath =
-			value.obj?.newNoteTemplate || settings.addNewNoteTemplateFile;
+		const templatePath = value.obj?.newNoteTemplate || settings.addNewNoteTemplateFile;
 		if (templatePath) {
 			const fileTemplate = app.vault.getAbstractFileByPath(
 				`${templatePath}.md`
@@ -46,10 +45,7 @@ export async function sharedSelectSuggestion(
 			value.obj.alias = value.obj?.query;
 		} catch (error) {
 			// Check if error is due to file already existing
-			if (
-				error?.message?.includes("already exists") ||
-				error?.message?.includes("File already exists")
-			) {
+			if (error?.message?.includes("already exists") || error?.message?.includes("File already exists")) {
 				new Notice(
 					`Note "${value.obj?.query}" already exists at path: ${value.obj?.filePath}`
 				);
