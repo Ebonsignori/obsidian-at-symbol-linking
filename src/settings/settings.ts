@@ -1,7 +1,13 @@
-import { App, ButtonComponent, Notice, PluginSettingTab, Setting } from "obsidian";
+import {
+	App,
+	ButtonComponent,
+	Notice,
+	PluginSettingTab,
+	Setting,
+} from "obsidian";
 import AtSymbolLinking from "src/main";
-import { FileSuggest } from "./file-suggest";
 import { FolderSuggest } from "./folder-suggest";
+import { FileSuggest } from "./file-suggest";
 
 export interface FolderSymbolMapping {
 	folder: string;
