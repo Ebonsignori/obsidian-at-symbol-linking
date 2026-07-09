@@ -80,6 +80,8 @@ export function sharedGetSuggestions(
 					.map((s) => s.trim());
 			}
 			for (const alias of aliases) {
+				// Skip null/empty entries (e.g. from YAML `aliases:\n  -`)
+				if (!alias) continue;
 				options.push({
 					fileName: settings.removeAccents
 						? removeAccents(file.basename)
