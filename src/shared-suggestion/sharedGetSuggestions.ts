@@ -32,7 +32,7 @@ export function sharedGetSuggestions(
 				: folder
 					? `${folder}/...`
 					: "...";
-			
+
 			results.push({
 				obj: {
 					isCreateNewOption: true,
@@ -147,7 +147,8 @@ export function sharedGetSuggestions(
 			}
 
 			const separator = folder ? "/" : "";
-			const symbolPrefix = settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
+			const symbolPrefix =
+				settings.includeSymbolInNewFileName && triggeredSymbol ? triggeredSymbol : "";
 			results.push({
 				obj: {
 					isCreateNewOption: true,
